@@ -139,10 +139,7 @@ struct TimerView: View {
     private var notesSection: some View {
         RecordingNotesEditor(
             notes: $viewModel.entryNotes,
-            isExpanded: $showingNotesEditor,
-            project: viewModel.selectedProject,
-            recordingName: viewModel.recordingPreviewName,
-            durationText: viewModel.isRunning ? viewModel.formattedElapsedTime : nil
+            isExpanded: $showingNotesEditor
         )
     }
 
