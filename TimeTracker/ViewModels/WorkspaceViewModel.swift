@@ -3,7 +3,6 @@ import Foundation
 @MainActor
 final class WorkspaceViewModel: ObservableObject {
     @Published var projects: [Project] = []
-    @Published var recordingsCount = 0
     @Published var errorMessage: String?
 
     init() {
@@ -12,7 +11,6 @@ final class WorkspaceViewModel: ObservableObject {
 
     func loadData() {
         projects = DatabaseManager.shared.fetchAllProjects()
-        recordingsCount = DatabaseManager.shared.fetchAllTimeEntries().count
     }
 
     func saveProject(_ project: Project) {
@@ -40,10 +38,8 @@ final class WorkspaceViewModel: ObservableObject {
             return
         }
 
-        let entriesInProject = DatabaseManager.shared.fetchAllTimeEntries(projectFilterId: projectIdentifier)
-        for entry in entriesInProject {
-            RecordingStore.shared.deleteEntry(entry)
-        }
+        // One statement and one change notification instead of one per recording.
+        DatabaseManager.shared.deleteTimeEntries(inProjectWithId: projectIdentifier)
 
         DatabaseManager.shared.deleteProject(project)
 

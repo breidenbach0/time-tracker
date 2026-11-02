@@ -1,6 +1,10 @@
 import Foundation
 import SQLite
 
+enum DatabaseError: Error {
+    case notConnected
+}
+
 final class DatabaseManager {
     static let rootDirectoryURL: URL = {
         let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -99,6 +103,11 @@ final class DatabaseManager {
                 print("Database migration error for \(sourceComponent.lastPathComponent): \(error)")
             }
         }
+    }
+
+    private func connection() throws -> Connection {
+        guard let db else { throw DatabaseError.notConnected }
+        return db
     }
 
     private func setupDatabase() {
@@ -457,7 +466,7 @@ final class DatabaseManager {
 
         do {
             let query = projects.order(createdAt.asc)
-            for row in try db!.prepare(query) {
+            for row in try connection().prepare(query) {
                 result.append(Project(
                     id: row[id],
                     name: row[name],
@@ -558,7 +567,7 @@ final class DatabaseManager {
         var result: [Category] = []
         do {
             let query = categories.order(name.asc)
-            for row in try db!.prepare(query) {
+            for row in try connection().prepare(query) {
                 result.append(Category(
                     id: row[id],
                     name: row[name],
@@ -637,6 +646,23 @@ final class DatabaseManager {
 
     // MARK: - Time Entry Operations
 
+    private func timeEntry(from row: Row) -> TimeEntry {
+        TimeEntry(
+            id: row[id],
+            name: row[name],
+            notes: row[notes],
+            projectId: row[projectId],
+            categoryId: row[categoryId],
+            startDate: row[startDate],
+            endDate: row[endDate],
+            createdAt: row[createdAt],
+            updatedAt: row[updatedAt],
+            syncProvider: row[syncProvider].flatMap(SyncProvider.init(rawValue:)),
+            syncCalendarIdentifier: row[syncCalendarIdentifier],
+            syncEventIdentifier: row[calendarEventIdentifier]
+        )
+    }
+
     func fetchAllTimeEntries(projectFilterId: Int64? = nil) -> [TimeEntry] {
         var result: [TimeEntry] = []
         do {
@@ -645,21 +671,8 @@ final class DatabaseManager {
                 query = query.filter(projectId == projectFilterId)
             }
 
-            for row in try db!.prepare(query) {
-                result.append(TimeEntry(
-                    id: row[id],
-                    name: row[name],
-                    notes: row[notes],
-                    projectId: row[projectId],
-                    categoryId: row[categoryId],
-                    startDate: row[startDate],
-                    endDate: row[endDate],
-                    createdAt: row[createdAt],
-                    updatedAt: row[updatedAt],
-                    syncProvider: row[syncProvider].flatMap(SyncProvider.init(rawValue:)),
-                    syncCalendarIdentifier: row[syncCalendarIdentifier],
-                    syncEventIdentifier: row[calendarEventIdentifier]
-                ))
+            for row in try connection().prepare(query) {
+                result.append(timeEntry(from: row))
             }
         } catch {
             print("Fetch time entries error: \(error)")
@@ -682,21 +695,8 @@ final class DatabaseManager {
                 query = query.filter(projectId == projectFilterId)
             }
 
-            for row in try db!.prepare(query) {
-                result.append(TimeEntry(
-                    id: row[id],
-                    name: row[name],
-                    notes: row[notes],
-                    projectId: row[projectId],
-                    categoryId: row[categoryId],
-                    startDate: row[startDate],
-                    endDate: row[endDate],
-                    createdAt: row[createdAt],
-                    updatedAt: row[updatedAt],
-                    syncProvider: row[syncProvider].flatMap(SyncProvider.init(rawValue:)),
-                    syncCalendarIdentifier: row[syncCalendarIdentifier],
-                    syncEventIdentifier: row[calendarEventIdentifier]
-                ))
+            for row in try connection().prepare(query) {
+                result.append(timeEntry(from: row))
             }
         } catch {
             print("Fetch time entries for date error: \(error)")
@@ -715,21 +715,8 @@ final class DatabaseManager {
                 query = query.filter(projectId == projectFilterId)
             }
 
-            for row in try db!.prepare(query) {
-                result.append(TimeEntry(
-                    id: row[id],
-                    name: row[name],
-                    notes: row[notes],
-                    projectId: row[projectId],
-                    categoryId: row[categoryId],
-                    startDate: row[startDate],
-                    endDate: row[endDate],
-                    createdAt: row[createdAt],
-                    updatedAt: row[updatedAt],
-                    syncProvider: row[syncProvider].flatMap(SyncProvider.init(rawValue:)),
-                    syncCalendarIdentifier: row[syncCalendarIdentifier],
-                    syncEventIdentifier: row[calendarEventIdentifier]
-                ))
+            for row in try connection().prepare(query) {
+                result.append(timeEntry(from: row))
             }
         } catch {
             print("Fetch time entries range error: \(error)")
@@ -796,25 +783,47 @@ final class DatabaseManager {
         }
     }
 
+    func deleteTimeEntries(inProjectWithId projectIdentifier: Int64) {
+        do {
+            try db?.run(timeEntries.filter(projectId == projectIdentifier).delete())
+            postWorkspaceChanged()
+        } catch {
+            print("Delete project time entries error: \(error)")
+        }
+    }
+
     func nextRecordingName(for projectIdentifier: Int64) -> String {
-        let allNames = fetchFamousPeopleNames()
+        let allNames = famousPeopleNames
         guard !allNames.isEmpty else { return "Recording" }
 
-        let usedNames = Set(
-            fetchAllTimeEntries(projectFilterId: projectIdentifier)
-                .map(\.name)
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        )
-
+        let usedNames = fetchTimeEntryNames(projectFilterId: projectIdentifier)
         let availableNames = allNames.filter { !usedNames.contains($0) }
         return (availableNames.randomElement() ?? allNames.randomElement()) ?? "Recording"
     }
+
+    private func fetchTimeEntryNames(projectFilterId: Int64) -> Set<String> {
+        var names = Set<String>()
+
+        do {
+            let query = timeEntries.select(name).filter(projectId == projectFilterId)
+            for row in try connection().prepare(query) {
+                names.insert(row[name].trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        } catch {
+            print("Fetch time entry names error: \(error)")
+        }
+
+        return names
+    }
+
+    /// The seed list never changes after the first launch, so it is read once.
+    private lazy var famousPeopleNames: [String] = fetchFamousPeopleNames()
 
     private func fetchFamousPeopleNames() -> [String] {
         var names: [String] = []
 
         do {
-            for row in try db!.prepare(famousNames.order(famousPersonName.asc)) {
+            for row in try connection().prepare(famousNames.order(famousPersonName.asc)) {
                 let candidate = row[famousPersonName].trimmingCharacters(in: .whitespacesAndNewlines)
                 if !candidate.isEmpty, !blockedFamousNames.contains(candidate) {
                     names.append(candidate)

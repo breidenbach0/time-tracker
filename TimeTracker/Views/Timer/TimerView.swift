@@ -78,11 +78,13 @@ struct TimerView: View {
             recordingNameHeader
             notesSection
 
-            Text(viewModel.isRunning ? viewModel.formattedElapsedTime : "00:00:00")
-                .font(.system(size: 68, weight: .bold, design: .rounded))
-                .foregroundColor(AppTheme.textPrimary)
-                .monospacedDigit()
-                .frame(maxWidth: .infinity, alignment: .center)
+            TimelineView(.periodic(from: viewModel.startDate, by: 1)) { context in
+                Text(viewModel.formattedElapsedTime(at: context.date))
+                    .font(.system(size: 68, weight: .bold, design: .rounded))
+                    .foregroundColor(AppTheme.textPrimary)
+                    .monospacedDigit()
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
 
             HStack(spacing: AppTheme.spacingMD) {
                 Button(action: toggleRecording) {

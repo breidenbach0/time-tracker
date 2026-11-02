@@ -8,14 +8,15 @@ final class TimerViewModel: ObservableObject {
     @Published var entryName: String = ""
     @Published var entryNotes: String = ""
     @Published var selectedProjectId: Int64?
-    @Published var elapsedTime: TimeInterval = 0
     @Published var startDate: Date = Date()
     @Published var projects: [Project] = []
-    @Published var lastRecordedEntry: TimeEntry?
-    @Published var recentEntries: [TimeEntry] = []
     @Published private(set) var autoNameSuggestion: String = "Recording"
 
-    private var timerTask: Task<Void, Never>?
+    /// Computed on demand. Views that show a live clock wrap it in a `TimelineView`,
+    /// so the model no longer publishes a change (and re-renders every window) each second.
+    var elapsedTime: TimeInterval {
+        isRunning ? max(0, Date().timeIntervalSince(startDate)) : 0
+    }
 
     init() {
         loadWorkspace()
@@ -27,7 +28,6 @@ final class TimerViewModel: ObservableObject {
         ensureValidSelectedProject()
 
         refreshAutoNameSuggestion()
-        reloadRecentEntries()
     }
 
     func checkRunningTimer() {
@@ -38,8 +38,6 @@ final class TimerViewModel: ObservableObject {
             selectedProjectId = state.projectId
             startDate = state.startDate
             isRunning = true
-            elapsedTime = Date().timeIntervalSince(startDate)
-            startTimerInternal()
         } else {
             DatabaseManager.shared.clearRunningTimerState()
         }
@@ -60,7 +58,6 @@ final class TimerViewModel: ObservableObject {
 
         startDate = Date()
         isRunning = true
-        elapsedTime = 0
 
         DatabaseManager.shared.saveRunningTimerState(
             name: entryName,
@@ -69,8 +66,6 @@ final class TimerViewModel: ObservableObject {
             categoryId: nil,
             startDate: startDate
         )
-
-        startTimerInternal()
     }
 
     func stopTimer() -> TimeEntry? {
@@ -79,8 +74,6 @@ final class TimerViewModel: ObservableObject {
               projects.contains(where: { $0.id == selectedProjectId }) else {
             return nil
         }
-
-        stopTimerInternal()
 
         let entry = RecordingStore.shared.saveEntry(TimeEntry(
             name: entryName,
@@ -95,10 +88,7 @@ final class TimerViewModel: ObservableObject {
         isRunning = false
         entryName = ""
         entryNotes = ""
-        elapsedTime = 0
-        lastRecordedEntry = entry
         refreshAutoNameSuggestion()
-        reloadRecentEntries()
 
         return entry
     }
@@ -108,7 +98,6 @@ final class TimerViewModel: ObservableObject {
         ensureValidSelectedProject()
         persistSelectedProject()
         refreshAutoNameSuggestion()
-        reloadRecentEntries()
         persistRunningTimerStateIfNeeded()
     }
 
@@ -124,30 +113,17 @@ final class TimerViewModel: ObservableObject {
         )
     }
 
-    private func startTimerInternal() {
-        timerTask?.cancel()
-        timerTask = Task { [weak self] in
-            guard let self = self else { return }
-
-            while !Task.isCancelled {
-                self.elapsedTime = Date().timeIntervalSince(self.startDate)
-
-                do {
-                    try await Task.sleep(for: .seconds(1))
-                } catch {
-                    break
-                }
-            }
-        }
-    }
-
-    private func stopTimerInternal() {
-        timerTask?.cancel()
-        timerTask = nil
-    }
-
     var formattedElapsedTime: String {
-        let totalSeconds = Int(elapsedTime)
+        Self.formatClock(elapsedTime)
+    }
+
+    func formattedElapsedTime(at date: Date) -> String {
+        guard isRunning else { return Self.formatClock(0) }
+        return Self.formatClock(date.timeIntervalSince(startDate))
+    }
+
+    static func formatClock(_ interval: TimeInterval) -> String {
+        let totalSeconds = max(0, Int(interval))
         let hours = totalSeconds / 3600
         let minutes = (totalSeconds % 3600) / 60
         let seconds = totalSeconds % 60
@@ -199,10 +175,6 @@ final class TimerViewModel: ObservableObject {
         } else {
             UserDefaults.standard.removeObject(forKey: "selected_project_id")
         }
-    }
-
-    private func reloadRecentEntries() {
-        recentEntries = Array(DatabaseManager.shared.fetchAllTimeEntries(projectFilterId: selectedProjectId).prefix(4))
     }
 
     private func refreshAutoNameSuggestion() {

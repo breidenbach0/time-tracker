@@ -5,22 +5,12 @@ import AppKit
 
 struct MacWindowConfigurator: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-
-        DispatchQueue.main.async {
-            guard let window = view.window else { return }
-            configure(window: window)
-        }
-
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        DispatchQueue.main.async {
-            guard let window = nsView.window else { return }
+        WindowAttachmentView { window in
             configure(window: window)
         }
     }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
 
     private func configure(window: NSWindow) {
         let minimumSize = NSSize(width: 620, height: 700)
@@ -52,6 +42,29 @@ struct MacWindowConfigurator: NSViewRepresentable {
     }
 }
 
+/// Calls `onAttach` once, when the view joins a window, instead of on every SwiftUI update.
+private final class WindowAttachmentView: NSView {
+    private let onAttach: (NSWindow) -> Void
+    private weak var configuredWindow: NSWindow?
+
+    init(onAttach: @escaping (NSWindow) -> Void) {
+        self.onAttach = onAttach
+        super.init(frame: .zero)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard let window, window !== configuredWindow else { return }
+        configuredWindow = window
+        onAttach(window)
+    }
+}
+
 extension View {
     func configureMacWindow() -> some View {
         background(MacWindowConfigurator())
@@ -64,22 +77,12 @@ extension View {
 
 struct MiniPlayerWindowConfigurator: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-
-        DispatchQueue.main.async {
-            guard let window = view.window else { return }
-            configure(window: window)
-        }
-
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        DispatchQueue.main.async {
-            guard let window = nsView.window else { return }
+        WindowAttachmentView { window in
             configure(window: window)
         }
     }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
 
     private func configure(window: NSWindow) {
         let playerSize = NSSize(width: 680, height: 74)

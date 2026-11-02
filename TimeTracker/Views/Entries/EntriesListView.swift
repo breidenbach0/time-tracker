@@ -211,9 +211,9 @@ struct EntriesListView: View {
 
     private var entriesList: some View {
         List {
-            ForEach(groupedEntries.keys.sorted(by: >), id: \.self) { date in
+            ForEach(viewModel.daySections) { section in
                 Section {
-                    ForEach(groupedEntries[date] ?? [], id: \.id) { entry in
+                    ForEach(section.entries, id: \.id) { entry in
                         EntryRowView(
                             entry: entry,
                             project: viewModel.project(for: entry.projectId),
@@ -234,7 +234,7 @@ struct EntriesListView: View {
                     }
                 } header: {
                     HStack {
-                        Text(formatSectionDate(date))
+                        Text(formatSectionDate(section.day))
                             .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundColor(AppTheme.textPrimary)
                     }
@@ -347,7 +347,7 @@ struct EntriesListView: View {
 
     private func calendarDayCell(for date: Date) -> some View {
         let calendar = Calendar.current
-        let entries = entries(on: date)
+        let entries = viewModel.entries(on: date)
         let isSelected = calendar.isDate(date, inSameDayAs: selectedCalendarDate)
         let isCurrentMonth = calendar.isDate(date, equalTo: calendarMonth, toGranularity: .month)
         let projectColors = projectColorHexes(for: entries)
@@ -437,7 +437,7 @@ struct EntriesListView: View {
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundColor(AppTheme.textPrimary)
 
-            let dayEntries = entries(on: selectedCalendarDate)
+            let dayEntries = viewModel.entries(on: selectedCalendarDate)
             if dayEntries.isEmpty {
                 Text("No recordings")
                     .font(.system(size: 14, weight: .semibold))
@@ -463,20 +463,7 @@ struct EntriesListView: View {
         }
     }
 
-    private var groupedEntries: [Date: [TimeEntry]] {
-        let calendar = Calendar.current
-        var groups: [Date: [TimeEntry]] = [:]
-
-        for entry in viewModel.entries {
-            let startOfDay = calendar.startOfDay(for: entry.startDate)
-            groups[startOfDay, default: []].append(entry)
-        }
-
-        return groups
-    }
-
     private func formatSectionDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
         let calendar = Calendar.current
 
         if calendar.isDateInToday(date) {
@@ -484,8 +471,7 @@ struct EntriesListView: View {
         } else if calendar.isDateInYesterday(date) {
             return "Yesterday"
         } else {
-            formatter.dateFormat = "EEEE, MMM d"
-            return formatter.string(from: date)
+            return DisplayFormatter.formatter(pattern: "EEEE, MMM d").string(from: date)
         }
     }
 
@@ -503,11 +489,6 @@ struct EntriesListView: View {
 
     private var selectedDisplayMode: RecordingsDisplayMode {
         RecordingsDisplayMode(rawValue: displayModeRawValue) ?? .list
-    }
-
-    private func entries(on date: Date) -> [TimeEntry] {
-        let calendar = Calendar.current
-        return viewModel.entries.filter { calendar.isDate($0.startDate, inSameDayAs: date) }
     }
 
     private func projectColorHexes(for entries: [TimeEntry]) -> [String] {
@@ -532,9 +513,7 @@ struct EntriesListView: View {
     }
 
     private var calendarMonthTitle: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: calendarMonth)
+        DisplayFormatter.formatter(pattern: "MMMM yyyy").string(from: calendarMonth)
     }
 
     private var selectedDayTitle: String {
@@ -543,9 +522,7 @@ struct EntriesListView: View {
             return "Today"
         }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE, MMM d"
-        return formatter.string(from: selectedCalendarDate)
+        return DisplayFormatter.formatter(pattern: "EEEE, MMM d").string(from: selectedCalendarDate)
     }
 
     private var weekdaySymbols: [String] {
@@ -662,11 +639,8 @@ struct EntriesListView: View {
     }
 
     private func exportReportText(for exportEntries: [TimeEntry], periodTitle: String) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd.MM.yy"
-
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm"
+        let dateFormatter = DisplayFormatter.formatter(pattern: "dd.MM.yy")
+        let timeFormatter = DisplayFormatter.formatter(pattern: "HH:mm")
 
         let rows = exportEntries.sorted(by: { $0.startDate > $1.startDate }).map { entry in
             let start = timeFormatter.string(from: entry.startDate)
@@ -701,8 +675,7 @@ struct EntriesListView: View {
     }
 
     private func rangeTitle(from startDate: Date, to endDate: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd.MM.yyyy"
+        let formatter = DisplayFormatter.formatter(pattern: "dd.MM.yyyy")
         return "\(formatter.string(from: min(startDate, endDate))) - \(formatter.string(from: max(startDate, endDate)))"
     }
 
@@ -711,8 +684,7 @@ struct EntriesListView: View {
             return "custom-range"
         }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
+        let formatter = DisplayFormatter.formatter(pattern: "yyyy-MM-dd")
         return "\(formatter.string(from: min(startDate, endDate)))-to-\(formatter.string(from: max(startDate, endDate)))"
     }
 
@@ -752,9 +724,7 @@ struct EntriesListView: View {
     }
 
     private var dateStamp: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd-HHmm"
-        return formatter.string(from: Date())
+        DisplayFormatter.formatter(pattern: "yyyy-MM-dd-HHmm").string(from: Date())
     }
 }
 
@@ -1046,14 +1016,11 @@ private struct ExportRangePickerSheet: View {
     }
 
     private var monthTitle: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: displayedMonth)
+        DisplayFormatter.formatter(pattern: "MMMM yyyy").string(from: displayedMonth)
     }
 
     private var rangeText: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd.MM.yyyy"
+        let formatter = DisplayFormatter.formatter(pattern: "dd.MM.yyyy")
         return "\(formatter.string(from: min(startDate, endDate))) - \(formatter.string(from: max(startDate, endDate)))"
     }
 

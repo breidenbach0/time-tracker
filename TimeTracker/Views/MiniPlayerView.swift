@@ -13,11 +13,13 @@ struct MiniPlayerView: View {
 
                 projectSelector
 
-                Text(viewModel.isRunning ? viewModel.formattedElapsedTime : "00:00:00")
-                    .font(.system(size: 19, weight: .bold, design: .rounded))
-                    .foregroundColor(AppTheme.textPrimary)
-                    .monospacedDigit()
-                    .fixedSize()
+                TimelineView(.periodic(from: viewModel.startDate, by: 1)) { context in
+                    Text(viewModel.formattedElapsedTime(at: context.date))
+                        .font(.system(size: 19, weight: .bold, design: .rounded))
+                        .foregroundColor(AppTheme.textPrimary)
+                        .monospacedDigit()
+                        .fixedSize()
+                }
 
                 Button(action: toggleRecording) {
                     Image(systemName: viewModel.isRunning ? "stop.fill" : "play.fill")

@@ -19,11 +19,34 @@ enum ExportPeriod: String, CaseIterable, Identifiable {
     }
 }
 
+struct EntryDaySection: Identifiable {
+    let day: Date
+    let entries: [TimeEntry]
+    let totalDuration: TimeInterval
+
+    var id: Date { day }
+}
+
 @MainActor
 final class EntriesViewModel: ObservableObject {
-    @Published var entries: [TimeEntry] = []
-    @Published var projects: [Project] = []
+    @Published var entries: [TimeEntry] = [] {
+        didSet { rebuildDayIndex() }
+    }
+    @Published var projects: [Project] = [] {
+        didSet {
+            projectsByID = Dictionary(
+                projects.compactMap { project in project.id.map { ($0, project) } },
+                uniquingKeysWith: { first, _ in first }
+            )
+        }
+    }
     @Published var selectedProjectFilterId: Int64?
+
+    /// Derived once per load instead of on every render.
+    private(set) var daySections: [EntryDaySection] = []
+    private(set) var entriesByDay: [Date: [TimeEntry]] = [:]
+    private(set) var totalDuration: TimeInterval = 0
+    private var projectsByID: [Int64: Project] = [:]
 
     init() {
         loadWorkspace()
@@ -62,7 +85,48 @@ final class EntriesViewModel: ObservableObject {
     }
 
     func project(for id: Int64) -> Project? {
-        projects.first { $0.id == id }
+        projectsByID[id]
+    }
+
+    func entries(on day: Date) -> [TimeEntry] {
+        entriesByDay[Calendar.current.startOfDay(for: day)] ?? []
+    }
+
+    private func rebuildDayIndex() {
+        let calendar = Calendar.current
+        var sections: [EntryDaySection] = []
+        var byDay: [Date: [TimeEntry]] = [:]
+        var currentDay: Date?
+        var currentEntries: [TimeEntry] = []
+        var total: TimeInterval = 0
+
+        func closeSection() {
+            guard let currentDay, !currentEntries.isEmpty else { return }
+            sections.append(EntryDaySection(
+                day: currentDay,
+                entries: currentEntries,
+                totalDuration: currentEntries.reduce(0) { $0 + $1.duration }
+            ))
+        }
+
+        // Entries arrive newest first, so one pass yields sections in display order.
+        for entry in entries {
+            let day = calendar.startOfDay(for: entry.startDate)
+            byDay[day, default: []].append(entry)
+            total += entry.duration
+
+            if day != currentDay {
+                closeSection()
+                currentDay = day
+                currentEntries = []
+            }
+            currentEntries.append(entry)
+        }
+        closeSection()
+
+        daySections = sections
+        entriesByDay = byDay
+        totalDuration = total
     }
 
     func saveEntry(_ entry: TimeEntry) {
