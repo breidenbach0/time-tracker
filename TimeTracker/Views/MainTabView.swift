@@ -34,6 +34,7 @@ private enum AppSection: String, CaseIterable, Identifiable {
 struct MainTabView: View {
     @State private var selectedSection: AppSection = .record
     @State private var hasProjects = false
+    @ObservedObject private var updater = Updater.shared
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -60,6 +61,14 @@ struct MainTabView: View {
                     SetupRequiredView()
                 }
             }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            UpdateCard(updater: updater)
+        }
+        .alert("You’re Up to Date", isPresented: $updater.isShowingUpToDate) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("TimeTracker \(updater.currentVersion?.description ?? "") is the newest version.")
         }
         .onAppear(perform: refreshProjects)
         .onReceive(NotificationCenter.default.publisher(for: .workspaceDidChange)) { _ in

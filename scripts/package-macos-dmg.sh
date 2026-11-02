@@ -1,55 +1,72 @@
 #!/usr/bin/env bash
+# Builds dist/TimeTracker.dmg for downloading: TimeTracker.app next to a shortcut to Applications.
+# Also builds dist/TimeTracker.zip, the app on its own, which TimeTracker's updater installs, and
+# signs it into dist/TimeTracker.zip.sig with the update key in your Keychain (macOS asks you to
+# allow that). Attach all three to a release.
+# Usage: scripts/package-macos-dmg.sh
+#        UNSIGNED=1 scripts/package-macos-dmg.sh     no signature, for builds that won't be released
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
 PROJECT_PATH="$ROOT_DIR/TimeTracker.xcodeproj"
 SCHEME="TimeTracker"
 CONFIGURATION="${CONFIGURATION:-Release}"
 DERIVED_DATA_PATH="$ROOT_DIR/build/DerivedData"
 DIST_DIR="$ROOT_DIR/dist"
-VOLUME_NAME="TimeTracker Installer"
-OUTPUT_DMG="$DIST_DIR/TimeTracker-macOS.dmg"
+BUILD_LOG="$ROOT_DIR/build/xcodebuild.log"
 
 if [[ -z "${DEVELOPER_DIR:-}" && -d "/Applications/Xcode.app/Contents/Developer" ]]; then
   export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
 fi
 
 rm -rf "$DERIVED_DATA_PATH"
+mkdir -p "$ROOT_DIR/build" "$DIST_DIR"
 
 echo "Building macOS app ($CONFIGURATION)..."
-xcodebuild \
+if ! xcodebuild \
   -project "$PROJECT_PATH" \
   -scheme "$SCHEME" \
   -configuration "$CONFIGURATION" \
-  -destination "platform=macOS" \
+  -destination "generic/platform=macOS" \
   -derivedDataPath "$DERIVED_DATA_PATH" \
-  build >/tmp/timetracker-build.log
+  build >"$BUILD_LOG" 2>&1; then
+  echo "Build failed; see $BUILD_LOG"
+  exit 1
+fi
 
 APP_PATH="$DERIVED_DATA_PATH/Build/Products/$CONFIGURATION/TimeTracker.app"
 if [[ ! -d "$APP_PATH" ]]; then
   echo "Build succeeded, but app was not found at: $APP_PATH"
-  echo "xcodebuild log is at /tmp/timetracker-build.log"
   exit 1
 fi
+VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP_PATH/Contents/Info.plist")"
 
-STAGING_DIR="$(mktemp -d /tmp/timetracker-dmg.XXXXXX)"
-cleanup() {
-  rm -rf "$STAGING_DIR"
-}
-trap cleanup EXIT
+STAGE="$(mktemp -d)"
+trap 'rm -rf "$STAGE"' EXIT
+mkdir -p "$STAGE/TimeTracker"
+# Only owner-writable files, and no extended attributes, quarantine or ACLs.
+ditto --norsrc --noextattr --noqtn --noacl "$APP_PATH" "$STAGE/TimeTracker/TimeTracker.app"
+chmod -R go-w "$STAGE/TimeTracker/TimeTracker.app"
+codesign --verify --strict "$STAGE/TimeTracker/TimeTracker.app"
+ln -s /Applications "$STAGE/TimeTracker/Applications"
 
-mkdir -p "$DIST_DIR" "$STAGING_DIR/installer"
-cp -R "$APP_PATH" "$STAGING_DIR/installer/"
-ln -s /Applications "$STAGING_DIR/installer/Applications"
+rm -f "$DIST_DIR/TimeTracker.dmg"
+hdiutil create -volname "TimeTracker" -srcfolder "$STAGE/TimeTracker" -format UDZO -quiet "$DIST_DIR/TimeTracker.dmg"
+echo "Built dist/TimeTracker.dmg"
 
-rm -f "$OUTPUT_DMG"
-echo "Creating DMG installer..."
-hdiutil create \
-  -volname "$VOLUME_NAME" \
-  -srcfolder "$STAGING_DIR/installer" \
-  -ov \
-  -format UDZO \
-  "$OUTPUT_DMG" >/tmp/timetracker-dmg.log
+rm -f "$DIST_DIR/TimeTracker.zip"
+ditto -c -k --norsrc --keepParent "$STAGE/TimeTracker/TimeTracker.app" "$DIST_DIR/TimeTracker.zip"
+echo "Built dist/TimeTracker.zip"
 
-echo "DMG created: $OUTPUT_DMG"
-echo "Users can open it and drag TimeTracker.app to Applications."
+# TimeTracker's updater installs nothing without this signature.
+rm -f "$DIST_DIR/TimeTracker.zip.sig"
+if [[ "${UNSIGNED:-0}" != 1 ]]; then
+  swiftc -O -suppress-warnings scripts/sign-update.swift -o build/sign-update
+  build/sign-update "$DIST_DIR/TimeTracker.zip" > "$DIST_DIR/TimeTracker.zip.sig.tmp"
+  mv "$DIST_DIR/TimeTracker.zip.sig.tmp" "$DIST_DIR/TimeTracker.zip.sig"
+  echo "Signed dist/TimeTracker.zip"
+fi
+
+echo "TimeTracker $VERSION is ready in dist/."

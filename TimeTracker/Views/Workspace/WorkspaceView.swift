@@ -4,6 +4,7 @@ struct SettingsView: View {
     @StateObject private var viewModel = WorkspaceViewModel()
     @State private var editingTarget: ProjectEditorTarget?
     @State private var projectPendingDeletion: Project?
+    @ObservedObject private var updater = Updater.shared
     @AppStorage(DisplayPreferenceKeys.dateFormat) private var dateFormatRawValue = DateDisplayFormat.dayMonthYear.rawValue
     @AppStorage(DisplayPreferenceKeys.timeFormat) private var timeFormatRawValue = TimeDisplayFormat.twentyFourHour.rawValue
 
@@ -19,6 +20,7 @@ struct SettingsView: View {
 
                     formattingSection
                     projectsSection
+                    updatesSection
                 }
                 .padding(AppTheme.spacingLG)
                 .frame(maxWidth: 820, alignment: .leading)
@@ -135,6 +137,49 @@ struct SettingsView: View {
                     projectRow(project)
                 }
             }
+        }
+        .padding(AppTheme.spacingLG)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardSurface(cornerRadius: AppTheme.cornerRadiusXL)
+    }
+
+    private var updatesSection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacingMD) {
+            AppTheme.sectionLabel("Updates")
+
+            HStack(spacing: AppTheme.spacingMD) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("TimeTracker \(updater.currentVersion?.description ?? "")")
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundColor(AppTheme.textPrimary)
+
+                    Text("Signed updates from GitHub, installed in place.")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(AppTheme.textSecondary)
+                }
+
+                Spacer()
+
+                Button {
+                    Task { await updater.check(userInitiated: true) }
+                } label: {
+                    Text("Check Now")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundColor(AppTheme.textPrimary)
+                        .padding(.horizontal, AppTheme.spacingMD)
+                        .frame(height: 32)
+                }
+                .buttonStyle(.glassCapsule())
+                .disabled(updater.isBusy)
+            }
+
+            Toggle(isOn: $updater.checksAutomatically) {
+                Text("Check for updates automatically")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(AppTheme.textPrimary)
+            }
+            .toggleStyle(.switch)
+            .tint(AppTheme.success)
         }
         .padding(AppTheme.spacingLG)
         .frame(maxWidth: .infinity, alignment: .leading)
