@@ -16,16 +16,22 @@ struct ProjectEditorSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppTheme.primary.ignoresSafeArea()
+                AppBackdrop()
 
                 VStack(alignment: .leading, spacing: AppTheme.spacingLG) {
-                    TextField("Project name", text: $name)
-                        .font(.title3.weight(.semibold))
-                        .textFieldStyle(.plain)
-                        .foregroundColor(AppTheme.textPrimary)
-                        .padding()
-                        .background(AppTheme.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+                    HStack(spacing: AppTheme.spacingMD) {
+                        Circle()
+                            .fill(Color(hex: selectedColorHex))
+                            .frame(width: 14, height: 14)
+                            .shadow(color: Color(hex: selectedColorHex).opacity(0.7), radius: 5)
+
+                        TextField("Project name", text: $name)
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .textFieldStyle(.plain)
+                            .foregroundColor(AppTheme.textPrimary)
+                    }
+                    .padding(AppTheme.spacingMD)
+                    .fieldSurface(cornerRadius: AppTheme.cornerRadiusLarge)
 
                     DisclosureGroup(isExpanded: $showingScopeEditor) {
                         TextEditor(text: $scope)
@@ -35,27 +41,19 @@ struct ProjectEditorSheet: View {
                             .padding(.horizontal, 10)
                             .padding(.vertical, 8)
                             .frame(minHeight: 120)
-                            .background(AppTheme.surface)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                                    .stroke(AppTheme.border, lineWidth: 1)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+                            .fieldSurface(cornerRadius: AppTheme.cornerRadiusLarge)
                             .padding(.top, AppTheme.spacingXS)
                     } label: {
                         HStack(spacing: AppTheme.spacingXS) {
-                            Text("Scope")
-                                .font(.headline)
-                                .foregroundColor(AppTheme.textPrimary)
+                            AppTheme.sectionLabel("Scope")
 
                             if !scope.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                                 Text("Added")
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
                                     .foregroundColor(AppTheme.textPrimary)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
-                                    .background(AppTheme.surface)
-                                    .clipShape(Capsule())
+                                    .background(AppTheme.surfaceAlt, in: Capsule())
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -66,10 +64,8 @@ struct ProjectEditorSheet: View {
                         }
                     }
 
-                    VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
-                        Text("Accent Color")
-                            .font(.headline)
-                            .foregroundColor(AppTheme.textPrimary)
+                    VStack(alignment: .leading, spacing: AppTheme.spacingMD) {
+                        AppTheme.sectionLabel("Accent Color")
 
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: AppTheme.spacingSM) {
                             ForEach(AppTheme.colorPalette, id: \.self) { colorHex in
@@ -80,14 +76,17 @@ struct ProjectEditorSheet: View {
                                 } label: {
                                     Circle()
                                         .fill(Color(hex: colorHex))
-                                        .frame(width: 36, height: 36)
+                                        .frame(width: 34, height: 34)
+                                        .shadow(color: Color(hex: colorHex).opacity(selectedColorHex == colorHex ? 0.6 : 0), radius: 6)
+                                        .padding(4)
                                         .overlay(
                                             Circle()
-                                                .stroke(
+                                                .strokeBorder(
                                                     selectedColorHex == colorHex ? AppTheme.textPrimary : Color.clear,
-                                                    lineWidth: 3
+                                                    lineWidth: 2
                                                 )
                                         )
+                                        .animation(.easeOut(duration: 0.15), value: selectedColorHex)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -112,19 +111,20 @@ struct ProjectEditorSheet: View {
                                             center: .center
                                         )
                                     )
-                                    .frame(width: 36, height: 36)
+                                    .frame(width: 34, height: 34)
                                     .overlay(
                                         Image(systemName: "eyedropper.halffull")
                                             .font(.system(size: 12, weight: .bold))
                                             .foregroundColor(.white)
                                     )
+                                    .padding(4)
                                     .overlay(
                                         Circle()
-                                            .stroke(
+                                            .strokeBorder(
                                                 showingInlineColorWheel || isCustomColorSelected
                                                     ? AppTheme.textPrimary
                                                     : Color.clear,
-                                                lineWidth: 3
+                                                lineWidth: 2
                                             )
                                     )
                             }

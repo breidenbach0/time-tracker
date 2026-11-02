@@ -9,28 +9,35 @@ struct MiniPlayerView: View {
     var body: some View {
         HStack(spacing: 10) {
             HStack(spacing: 10) {
+                PulsingDot(isActive: viewModel.isRunning, size: 7)
+
                 recordingField
 
                 projectSelector
 
                 TimelineView(.periodic(from: viewModel.startDate, by: 1)) { context in
                     Text(viewModel.formattedElapsedTime(at: context.date))
-                        .font(.system(size: 19, weight: .bold, design: .rounded))
-                        .foregroundColor(AppTheme.textPrimary)
+                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                        .foregroundColor(viewModel.isRunning ? AppTheme.textPrimary : AppTheme.textSecondary)
                         .monospacedDigit()
+                        .numericTextTransition()
+                        .animation(.easeInOut(duration: 0.25), value: context.date)
                         .fixedSize()
                 }
 
                 Button(action: toggleRecording) {
                     Image(systemName: viewModel.isRunning ? "stop.fill" : "play.fill")
-                        .font(.system(size: 13, weight: .black))
-                        .foregroundColor(AppTheme.primary)
-                        .frame(width: 28, height: 28)
-                        .background(Color(hex: "#2DA9F7"))
-                        .clipShape(Circle())
+                        .font(.system(size: 12, weight: .black))
+                        .foregroundColor(viewModel.isRunning ? .white : AppTheme.onAccent)
+                        .frame(width: 30, height: 30)
+                        // Solid fill: glass nested inside the glass capsule loses its tint.
+                        .background(viewModel.isRunning ? AppTheme.recording : AppTheme.accent, in: Circle())
+                        .shadow(color: (viewModel.isRunning ? AppTheme.recording : Color.black).opacity(0.35), radius: 4, y: 1)
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
                 .disabled(!viewModel.canStartTimer && !viewModel.isRunning)
+                .animation(.easeInOut(duration: 0.2), value: viewModel.isRunning)
 
                 Button(action: showMainWindow) {
                     Image(systemName: "arrow.up.left.and.arrow.down.right")
@@ -40,19 +47,24 @@ struct MiniPlayerView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .hoverHighlight(cornerRadius: 15)
                 .help("Open full window")
             }
-            .padding(.leading, 14)
+            .padding(.leading, 18)
             .padding(.trailing, 10)
             .frame(width: 650, height: 48)
             .background(
-                Capsule(style: .continuous)
-                    .fill(AppTheme.surfaceAlt.opacity(0.96))
+                // The window is borderless and clear, so blur the desktop ourselves under the glass.
+                WindowGlassBackground(material: .hudWindow)
+                    .overlay(AppTheme.canvas.opacity(0.45))
+                    .clipShape(Capsule(style: .continuous))
             )
+            .glassSurface(in: Capsule(style: .continuous))
             .overlay(
                 Capsule(style: .continuous)
-                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    .strokeBorder(AppTheme.edgeHighlight, lineWidth: 1)
             )
+            .shadow(color: .black.opacity(0.35), radius: 10, x: 0, y: 5)
         }
         .frame(width: 680, height: 74)
         .configureMiniPlayerWindow()
@@ -71,7 +83,7 @@ struct MiniPlayerView: View {
         TextField(
             "",
             text: $viewModel.entryName,
-            prompt: Text(viewModel.recordingPreviewName).foregroundColor(AppTheme.textSecondary)
+            prompt: Text(viewModel.recordingPreviewName).foregroundColor(AppTheme.textTertiary)
         )
         .textFieldStyle(.plain)
         .font(.system(size: 13, weight: .semibold, design: .rounded))
@@ -86,9 +98,10 @@ struct MiniPlayerView: View {
             HStack(spacing: 6) {
                 Circle()
                     .fill(projectTint)
-                    .frame(width: 6, height: 6)
+                    .frame(width: 7, height: 7)
+                    .shadow(color: projectTint.opacity(0.8), radius: 3)
 
-                Text(viewModel.selectedProject?.name ?? "Noch kein Projekt")
+                Text(viewModel.selectedProject?.name ?? "No Project")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundColor(AppTheme.textPrimary)
                     .lineLimit(1)
@@ -96,9 +109,9 @@ struct MiniPlayerView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(projectTint.opacity(0.24))
-            .clipShape(Capsule(style: .continuous))
-            .contentShape(Rectangle())
+            .background(projectTint.opacity(0.2), in: Capsule(style: .continuous))
+            .overlay(Capsule(style: .continuous).strokeBorder(projectTint.opacity(0.35), lineWidth: 1))
+            .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
         .fixedSize(horizontal: true, vertical: false)
@@ -144,7 +157,7 @@ private struct MiniPlayerProjectPicker: View {
     let onSelect: (Int64?) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacingXS) {
+        VStack(alignment: .leading, spacing: 2) {
             ForEach(projects) { project in
                 Button {
                     onSelect(project.id)
@@ -169,14 +182,17 @@ private struct MiniPlayerProjectPicker: View {
                     }
                     .padding(.horizontal, AppTheme.spacingMD)
                     .frame(height: 34)
-                    .background(project.id == selectedProjectId ? AppTheme.surfaceAlt : Color.clear)
-                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall))
+                    .background(
+                        project.id == selectedProjectId ? AppTheme.surfaceAlt : Color.clear,
+                        in: RoundedRectangle(cornerRadius: AppTheme.cornerRadiusSmall, style: .continuous)
+                    )
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .hoverHighlight(cornerRadius: AppTheme.cornerRadiusSmall)
             }
         }
         .padding(AppTheme.spacingSM)
         .frame(width: 220)
-        .background(AppTheme.surface)
     }
 }

@@ -23,6 +23,7 @@ struct EntriesListView: View {
     @State private var exportErrorMessage: String?
     @State private var calendarMonth = Date()
     @State private var selectedCalendarDate = Date()
+    @Namespace private var displayModeNamespace
     @AppStorage("recordings_display_mode") private var displayModeRawValue = RecordingsDisplayMode.list.rawValue
     @AppStorage("last_exported_range_start") private var lastExportedRangeStart: Double = 0
     @AppStorage("last_exported_range_end") private var lastExportedRangeEnd: Double = 0
@@ -98,9 +99,18 @@ struct EntriesListView: View {
     private var topSection: some View {
         HStack(alignment: .bottom, spacing: AppTheme.spacingLG) {
             VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
-                Text("Recordings")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(AppTheme.textPrimary)
+                HStack(alignment: .firstTextBaseline, spacing: AppTheme.spacingSM) {
+                    Text("Recordings")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(AppTheme.textPrimary)
+
+                    if !viewModel.entries.isEmpty {
+                        Text(recordingsSummary)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundColor(AppTheme.textSecondary)
+                    }
+                }
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: AppTheme.spacingSM) {
@@ -133,54 +143,65 @@ struct EntriesListView: View {
 
                 Button(action: { showingExportRangePicker = true }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(AppTheme.textPrimary)
-                        .frame(width: 44, height: 44)
-                        .background(AppTheme.surfaceAlt)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .frame(width: 40, height: 40)
                 }
-                .buttonStyle(.plain)
-                .padding(.bottom, 2)
+                .buttonStyle(.glassCircle())
                 .disabled(viewModel.entries.isEmpty)
+                .help("Export PDF")
 
                 Button(action: { showingAddSheet = true }) {
                     Image(systemName: "plus")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(AppTheme.primary)
-                        .frame(width: 44, height: 44)
-                        .background(AppTheme.accent)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(AppTheme.onAccent)
+                        .frame(width: 40, height: 40)
                 }
-                .buttonStyle(.plain)
-                .padding(.bottom, 2)
+                .buttonStyle(.glassCircle(tint: AppTheme.accent.opacity(0.92)))
+                .help("Add Recording")
             }
+            .glassGroup(spacing: 10)
+            .padding(.bottom, 2)
         }
         .padding(.horizontal, AppTheme.spacingMD)
-        .padding(.top, AppTheme.spacingMD)
+        .padding(.top, AppTheme.spacingSM)
         .padding(.bottom, AppTheme.spacingMD)
     }
 
+    private var recordingsSummary: String {
+        let count = viewModel.entries.count
+        return "\(count) recording\(count == 1 ? "" : "s") · \(compactDuration(viewModel.totalDuration))"
+    }
+
     private var displayModeToggle: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 2) {
             displayModeButton(.list)
             displayModeButton(.calendar)
         }
         .padding(4)
-        .background(AppTheme.surfaceMuted)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .padding(.bottom, 2)
+        .glassSurface(in: Capsule(style: .continuous))
     }
 
     private func displayModeButton(_ mode: RecordingsDisplayMode) -> some View {
-        Button {
-            displayModeRawValue = mode.rawValue
+        let isSelected = selectedDisplayMode == mode
+
+        return Button {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                displayModeRawValue = mode.rawValue
+            }
         } label: {
             Image(systemName: mode.systemImage)
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(selectedDisplayMode == mode ? AppTheme.primary : AppTheme.textSecondary)
-                .frame(width: 36, height: 36)
-                .background(selectedDisplayMode == mode ? AppTheme.accent : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(isSelected ? AppTheme.onAccent : AppTheme.textSecondary)
+                .frame(width: 38, height: 32)
+                .background {
+                    if isSelected {
+                        Capsule(style: .continuous)
+                            .fill(AppTheme.accent)
+                            .matchedGeometryEffect(id: "displayMode", in: displayModeNamespace)
+                    }
+                }
+                .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
         .help(mode == .list ? "List view" : "Calendar view")
@@ -189,22 +210,33 @@ struct EntriesListView: View {
     private var emptyState: some View {
         VStack(spacing: AppTheme.spacingMD) {
             Spacer()
+
             Image(systemName: "clock")
-                .font(.system(size: 48))
+                .font(.system(size: 30, weight: .light))
                 .foregroundColor(AppTheme.textSecondary)
-            Text("No recordings yet")
-                .font(.headline)
-                .foregroundColor(AppTheme.textSecondary)
+                .frame(width: 72, height: 72)
+                .glassSurface(in: Circle())
+
+            VStack(spacing: AppTheme.spacingXS) {
+                Text("No recordings yet")
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundColor(AppTheme.textPrimary)
+
+                Text("Start the timer or add a recording by hand.")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(AppTheme.textSecondary)
+            }
+
             Button(action: { showingAddSheet = true }) {
                 Label("Create Recording", systemImage: "plus")
-                    .font(.headline)
-                    .foregroundColor(AppTheme.primary)
-                    .padding(.horizontal, AppTheme.spacingMD)
-                    .padding(.vertical, AppTheme.spacingSM)
-                    .background(AppTheme.accentBlue)
-                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundColor(AppTheme.onAccent)
+                    .padding(.horizontal, AppTheme.spacingLG)
+                    .frame(height: 40)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCapsule(tint: AppTheme.accent.opacity(0.92)))
+            .padding(.top, AppTheme.spacingXS)
+
             Spacer()
         }
     }
@@ -212,34 +244,31 @@ struct EntriesListView: View {
     private var entriesList: some View {
         List {
             ForEach(viewModel.daySections) { section in
-                Section {
-                    ForEach(section.entries, id: \.id) { entry in
-                        EntryRowView(
-                            entry: entry,
-                            project: viewModel.project(for: entry.projectId),
-                            onEdit: {
-                                selectedEntry = entry
-                            },
-                            onDelete: {
-                                viewModel.deleteEntry(entry)
-                            }
-                        )
-                        .listRowInsets(EdgeInsets(
-                            top: AppTheme.spacingSM,
-                            leading: 0,
-                            bottom: AppTheme.spacingSM,
-                            trailing: 0
-                        ))
-                        .listRowBackground(Color.clear)
-                    }
-                } header: {
-                    HStack {
-                        Text(formatSectionDate(section.day))
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundColor(AppTheme.textPrimary)
-                    }
-                    .padding(.top, AppTheme.spacingSM)
-                    .padding(.bottom, AppTheme.spacingXS)
+                // Day headers are plain rows: pinned section headers draw an opaque bar over the glass.
+                dayHeader(for: section)
+                    .listRowInsets(EdgeInsets(top: AppTheme.spacingMD, leading: 0, bottom: 2, trailing: 0))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+
+                ForEach(section.entries, id: \.id) { entry in
+                    EntryRowView(
+                        entry: entry,
+                        project: viewModel.project(for: entry.projectId),
+                        onEdit: {
+                            selectedEntry = entry
+                        },
+                        onDelete: {
+                            viewModel.deleteEntry(entry)
+                        }
+                    )
+                    .listRowInsets(EdgeInsets(
+                        top: AppTheme.spacingXS,
+                        leading: 0,
+                        bottom: AppTheme.spacingXS,
+                        trailing: 0
+                    ))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                 }
             }
             .listRowBackground(Color.clear)
@@ -247,6 +276,22 @@ struct EntriesListView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .frame(maxWidth: .infinity)
+    }
+
+    private func dayHeader(for section: EntryDaySection) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(formatSectionDate(section.day))
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundColor(AppTheme.textPrimary)
+
+            Spacer()
+
+            Text(compactDuration(section.totalDuration))
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .monospacedDigit()
+                .foregroundColor(AppTheme.textSecondary)
+        }
+        .padding(.horizontal, AppTheme.spacingXS)
     }
 
     private var recordingsCalendar: some View {
@@ -266,57 +311,56 @@ struct EntriesListView: View {
         HStack(spacing: AppTheme.spacingMD) {
             Button(action: { moveCalendarMonth(by: -1) }) {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundColor(AppTheme.textPrimary)
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .frame(width: 36, height: 36)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCircle())
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(calendarMonthTitle)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundColor(AppTheme.textPrimary)
 
-                Text("\(viewModel.entries.count) recordings")
-                    .font(.system(size: 12, weight: .semibold))
+                Text("\(monthEntryCount) recordings this month")
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundColor(AppTheme.textSecondary)
             }
 
             Spacer()
 
             Button(action: {
-                calendarMonth = Date()
-                selectedCalendarDate = Date()
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    calendarMonth = Date()
+                    selectedCalendarDate = Date()
+                }
             }) {
                 Text("Today")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundColor(AppTheme.textPrimary)
                     .padding(.horizontal, AppTheme.spacingMD)
-                    .frame(height: 40)
-                    .background(AppTheme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .frame(height: 36)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCapsule())
 
             Button(action: { moveCalendarMonth(by: 1) }) {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundColor(AppTheme.textPrimary)
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .frame(width: 36, height: 36)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCircle())
         }
+        .glassGroup(spacing: AppTheme.spacingSM)
         .padding(AppTheme.spacingMD)
-        .background(AppTheme.surfaceMuted)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                .stroke(AppTheme.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+        .cardSurface(cornerRadius: AppTheme.cornerRadiusXL)
+    }
+
+    private var monthEntryCount: Int {
+        let calendar = Calendar.current
+        return viewModel.entries.filter {
+            calendar.isDate($0.startDate, equalTo: calendarMonth, toGranularity: .month)
+        }.count
     }
 
     private var calendarGrid: some View {
@@ -324,42 +368,45 @@ struct EntriesListView: View {
             HStack {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .tracking(0.6)
+                        .textCase(.uppercase)
                         .foregroundColor(AppTheme.textSecondary)
                         .frame(maxWidth: .infinity)
                 }
             }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: AppTheme.spacingSM), count: 7), spacing: AppTheme.spacingSM) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 7), spacing: 6) {
                 ForEach(calendarDays, id: \.self) { date in
                     calendarDayCell(for: date)
                 }
             }
         }
         .padding(AppTheme.spacingMD)
-        .background(AppTheme.surface)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                .stroke(AppTheme.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+        .cardSurface(cornerRadius: AppTheme.cornerRadiusXL)
     }
 
     private func calendarDayCell(for date: Date) -> some View {
         let calendar = Calendar.current
         let entries = viewModel.entries(on: date)
         let isSelected = calendar.isDate(date, inSameDayAs: selectedCalendarDate)
+        let isToday = calendar.isDateInToday(date)
         let isCurrentMonth = calendar.isDate(date, equalTo: calendarMonth, toGranularity: .month)
         let projectColors = projectColorHexes(for: entries)
+        let shape = RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
 
         return Button {
-            selectedCalendarDate = date
+            withAnimation(.easeOut(duration: 0.15)) {
+                selectedCalendarDate = date
+            }
         } label: {
-            VStack(spacing: AppTheme.spacingXS) {
+            VStack(alignment: .leading, spacing: AppTheme.spacingXS) {
                 Text("\(calendar.component(.day, from: date))")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(dayTextColor(hasEntries: !entries.isEmpty, isSelected: isSelected, isCurrentMonth: isCurrentMonth))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundColor(isToday ? AppTheme.onAccent : dayTextColor(hasEntries: !entries.isEmpty, isSelected: isSelected, isCurrentMonth: isCurrentMonth))
+                    .frame(width: 24, height: 24)
+                    .background(isToday ? AppTheme.accent : Color.clear, in: Circle())
 
                 Spacer(minLength: 0)
 
@@ -367,7 +414,7 @@ struct EntriesListView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         ForEach(Array(entries.prefix(2).enumerated()), id: \.offset) { _, entry in
                             Text(entry.name)
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .font(.system(size: 10, weight: .semibold, design: .rounded))
                                 .foregroundColor(AppTheme.textPrimary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -376,30 +423,33 @@ struct EntriesListView: View {
 
                         if entries.count > 2 {
                             Text("+\(entries.count - 2) more")
-                                .font(.system(size: 9, weight: .bold, design: .rounded))
-                                .foregroundColor(AppTheme.textPrimary.opacity(0.78))
+                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .foregroundColor(AppTheme.textSecondary)
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
 
                     Text(compactDuration(entries.reduce(0) { $0 + $1.duration }))
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(AppTheme.textPrimary.opacity(0.88))
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundColor(AppTheme.textPrimary.opacity(0.9))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .padding(AppTheme.spacingSM)
-            .frame(height: 112)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: 104)
             .background {
                 calendarDayBackground(projectColors: projectColors, hasEntries: !entries.isEmpty)
+                    .clipShape(shape)
             }
             .overlay(
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
-                    .stroke(isSelected ? AppTheme.accent : AppTheme.border, lineWidth: isSelected ? 2 : 1)
+                shape.strokeBorder(isSelected ? AppTheme.accent.opacity(0.9) : AppTheme.border, lineWidth: isSelected ? 1.5 : 1)
             )
-            .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium))
-            .opacity(isCurrentMonth ? 1 : 0.52)
+            .contentShape(shape)
+            .hoverHighlight(cornerRadius: AppTheme.cornerRadiusMedium)
+            .opacity(isCurrentMonth ? 1 : 0.4)
         }
         .buttonStyle(.plain)
     }
@@ -408,14 +458,18 @@ struct EntriesListView: View {
     private func calendarDayBackground(projectColors: [String], hasEntries: Bool) -> some View {
         if hasEntries, projectColors.count > 1 {
             LinearGradient(
-                colors: projectColors.map { Color(hex: $0).opacity(0.82) },
+                colors: projectColors.map { Color(hex: $0).opacity(0.34) },
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         } else if hasEntries, let colorHex = projectColors.first {
-            Color(hex: colorHex).opacity(0.82)
+            LinearGradient(
+                colors: [Color(hex: colorHex).opacity(0.38), Color(hex: colorHex).opacity(0.2)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         } else {
-            AppTheme.surfaceMuted.opacity(0.55)
+            Color.white.opacity(0.025)
         }
     }
 
@@ -434,18 +488,17 @@ struct EntriesListView: View {
     private var selectedDayEntries: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
             Text(selectedDayTitle)
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .foregroundColor(AppTheme.textPrimary)
 
             let dayEntries = viewModel.entries(on: selectedCalendarDate)
             if dayEntries.isEmpty {
                 Text("No recordings")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundColor(AppTheme.textSecondary)
                     .padding(AppTheme.spacingMD)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(AppTheme.surfaceMuted)
-                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium))
+                    .cardSurface(cornerRadius: AppTheme.cornerRadiusMedium, fill: AppTheme.surface.opacity(0.6))
             } else {
                 ForEach(dayEntries, id: \.id) { entry in
                     EntryRowView(
@@ -739,7 +792,7 @@ private struct ExportRangePickerSheet: View {
     @State private var isChoosingEnd = false
 
     private let calendar = Calendar.current
-    private let orange = Color(hex: "#F59E0B")
+    private let orange = AppTheme.accentWarm
 
     init(
         lastExportedRange: ClosedRange<Date>?,
@@ -760,7 +813,7 @@ private struct ExportRangePickerSheet: View {
 
     var body: some View {
         ZStack {
-            AppTheme.primary.ignoresSafeArea()
+            AppBackdrop()
 
             VStack(alignment: .leading, spacing: AppTheme.spacingLG) {
                 header
@@ -778,11 +831,11 @@ private struct ExportRangePickerSheet: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Export Range")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
                     .foregroundColor(AppTheme.textPrimary)
 
                 Text("Pick the exact days you want in the PDF.")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundColor(AppTheme.textSecondary)
             }
 
@@ -790,44 +843,38 @@ private struct ExportRangePickerSheet: View {
 
             Button(action: onCancel) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(AppTheme.textSecondary)
-                    .frame(width: 34, height: 34)
-                    .background(AppTheme.surface)
-                    .clipShape(Circle())
+                    .frame(width: 32, height: 32)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCircle())
         }
     }
 
     private var rangeSummary: some View {
         HStack {
             Image(systemName: "calendar")
-                .font(.system(size: 14, weight: .bold))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(AppTheme.textSecondary)
 
             Text(rangeText)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundColor(AppTheme.textPrimary)
                 .monospacedDigit()
 
             Spacer()
 
             Text(isChoosingEnd ? "Pick end" : "Pick start")
-                .font(.system(size: 12, weight: .bold))
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .tracking(0.4)
+                .textCase(.uppercase)
                 .foregroundColor(isChoosingEnd ? orange : AppTheme.textSecondary)
                 .padding(.horizontal, AppTheme.spacingSM)
                 .padding(.vertical, AppTheme.spacingXS)
-                .background((isChoosingEnd ? orange : AppTheme.surfaceAlt).opacity(isChoosingEnd ? 0.22 : 1))
-                .clipShape(Capsule())
+                .background((isChoosingEnd ? orange.opacity(0.18) : AppTheme.surfaceAlt), in: Capsule())
         }
         .padding(AppTheme.spacingMD)
-        .background(AppTheme.surfaceMuted)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                .stroke(AppTheme.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+        .fieldSurface(cornerRadius: AppTheme.cornerRadiusLarge)
     }
 
     private var calendarCard: some View {
@@ -842,39 +889,34 @@ private struct ExportRangePickerSheet: View {
             }
         }
         .padding(AppTheme.spacingMD)
-        .background(AppTheme.surface)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                .stroke(AppTheme.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+        .cardSurface(cornerRadius: AppTheme.cornerRadiusXL)
     }
 
     private var monthHeader: some View {
         HStack {
             Button(action: { moveMonth(by: -1) }) {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(AppTheme.textPrimary)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 30, height: 30)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCircle())
 
             Spacer()
 
             Text(monthTitle)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundColor(AppTheme.textPrimary)
 
             Spacer()
 
             Button(action: { moveMonth(by: 1) }) {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(AppTheme.textPrimary)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 30, height: 30)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCircle())
         }
     }
 
@@ -884,7 +926,9 @@ private struct ExportRangePickerSheet: View {
         return HStack(spacing: AppTheme.spacingXS) {
             ForEach(symbols, id: \.self) { symbol in
                 Text(symbol)
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .tracking(0.6)
+                    .textCase(.uppercase)
                     .foregroundColor(AppTheme.textSecondary)
                     .frame(maxWidth: .infinity)
             }
@@ -909,26 +953,25 @@ private struct ExportRangePickerSheet: View {
         HStack(spacing: AppTheme.spacingSM) {
             Button(action: onCancel) {
                 Text("Cancel")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundColor(AppTheme.textPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
-                    .background(AppTheme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCapsule())
+            .keyboardShortcut(.cancelAction)
 
             Button(action: { onExport(startDate, endDate) }) {
                 Label("Export PDF", systemImage: "square.and.arrow.up")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(AppTheme.primary)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundColor(AppTheme.onAccent)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
-                    .background(AppTheme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCapsule(tint: AppTheme.accent.opacity(0.92)))
+            .keyboardShortcut(.defaultAction)
         }
+        .glassGroup(spacing: AppTheme.spacingSM)
     }
 
     private func dayButton(for date: Date) -> some View {
@@ -940,28 +983,31 @@ private struct ExportRangePickerSheet: View {
             day >= calendar.startOfDay(for: range.lowerBound) && day <= calendar.startOfDay(for: range.upperBound)
         } ?? false
 
+        let shape = RoundedRectangle(cornerRadius: 10, style: .continuous)
+
         return Button(action: { select(day) }) {
             Text("\(calendar.component(.day, from: day))")
-                .font(.system(size: 14, weight: isEndpoint ? .bold : .semibold, design: .rounded))
+                .font(.system(size: 14, weight: isEndpoint ? .bold : .medium, design: .rounded))
+                .monospacedDigit()
                 .foregroundColor(dayTextColor(isCurrentMonth: isCurrentMonth, isEndpoint: isEndpoint))
                 .frame(maxWidth: .infinity)
                 .frame(height: 36)
-                .background(dayBackground(isEndpoint: isEndpoint, isSelectedRange: isSelectedRange, wasExported: wasExported))
+                .background(dayBackground(isEndpoint: isEndpoint, isSelectedRange: isSelectedRange, wasExported: wasExported), in: shape)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(wasExported && !isEndpoint ? orange.opacity(0.65) : Color.clear, lineWidth: 1)
+                    shape.strokeBorder(wasExported && !isEndpoint ? orange.opacity(0.55) : Color.clear, lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .contentShape(shape)
+                .hoverHighlight(cornerRadius: 10)
         }
         .buttonStyle(.plain)
     }
 
     private func dayTextColor(isCurrentMonth: Bool, isEndpoint: Bool) -> Color {
         if isEndpoint {
-            return AppTheme.primary
+            return AppTheme.onAccent
         }
 
-        return isCurrentMonth ? AppTheme.textPrimary : AppTheme.textSecondary.opacity(0.55)
+        return isCurrentMonth ? AppTheme.textPrimary : AppTheme.textTertiary
     }
 
     private func dayBackground(isEndpoint: Bool, isSelectedRange: Bool, wasExported: Bool) -> Color {
@@ -974,7 +1020,7 @@ private struct ExportRangePickerSheet: View {
         }
 
         if wasExported {
-            return orange.opacity(0.22)
+            return orange.opacity(0.16)
         }
 
         return Color.clear

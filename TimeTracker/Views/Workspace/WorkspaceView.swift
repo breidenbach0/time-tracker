@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @StateObject private var viewModel = WorkspaceViewModel()
     @State private var editingTarget: ProjectEditorTarget?
+    @State private var projectPendingDeletion: Project?
     @AppStorage(DisplayPreferenceKeys.dateFormat) private var dateFormatRawValue = DateDisplayFormat.dayMonthYear.rawValue
     @AppStorage(DisplayPreferenceKeys.timeFormat) private var timeFormatRawValue = TimeDisplayFormat.twentyFourHour.rawValue
 
@@ -20,8 +21,10 @@ struct SettingsView: View {
                     projectsSection
                 }
                 .padding(AppTheme.spacingLG)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: 820, alignment: .leading)
+                .frame(maxWidth: .infinity)
             }
+            .scrollIndicators(.hidden)
         }
         .sheet(item: $editingTarget) { target in
             ProjectEditorSheet(project: target.project) { project in
@@ -34,6 +37,26 @@ struct SettingsView: View {
         .onReceive(NotificationCenter.default.publisher(for: .workspaceDidChange)) { _ in
             viewModel.loadData()
         }
+        .confirmationDialog(
+            "Delete \u{201C}\(projectPendingDeletion?.name ?? "")\u{201D}?",
+            isPresented: Binding(
+                get: { projectPendingDeletion != nil },
+                set: { if !$0 { projectPendingDeletion = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete Project and Recordings", role: .destructive) {
+                if let project = projectPendingDeletion {
+                    viewModel.deleteProject(project)
+                }
+                projectPendingDeletion = nil
+            }
+            Button("Cancel", role: .cancel) {
+                projectPendingDeletion = nil
+            }
+        } message: {
+            Text("All recordings in this project are deleted too. This can\u{2019}t be undone.")
+        }
         .alert("Settings", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
@@ -45,45 +68,39 @@ struct SettingsView: View {
     }
 
     private var formattingSection: some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
-            Text("Formatting")
-                .font(.title3.weight(.bold))
-                .foregroundColor(AppTheme.textPrimary)
+        VStack(alignment: .leading, spacing: AppTheme.spacingMD) {
+            AppTheme.sectionLabel("Formatting")
 
-            HStack(spacing: AppTheme.spacingMD) {
-                VStack(alignment: .leading, spacing: AppTheme.spacingXS) {
+            HStack(spacing: AppTheme.spacingLG) {
+                VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
                     Text("Date Format")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(AppTheme.textSecondary)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(AppTheme.textPrimary)
 
-                    Picker("", selection: Binding(
-                        get: { selectedDateFormat },
-                        set: { dateFormatRawValue = $0.rawValue }
-                    )) {
-                        ForEach(DateDisplayFormat.allCases) { format in
-                            Text(format.title).tag(format)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                    GlassSegmentedControl(
+                        options: DateDisplayFormat.allCases,
+                        title: \.title,
+                        selection: Binding(
+                            get: { selectedDateFormat },
+                            set: { dateFormatRawValue = $0.rawValue }
+                        )
+                    )
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                VStack(alignment: .leading, spacing: AppTheme.spacingXS) {
+                VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
                     Text("Time Format")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(AppTheme.textSecondary)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(AppTheme.textPrimary)
 
-                    Picker("", selection: Binding(
-                        get: { selectedTimeFormat },
-                        set: { timeFormatRawValue = $0.rawValue }
-                    )) {
-                        ForEach(TimeDisplayFormat.allCases) { format in
-                            Text(format.title).tag(format)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                    GlassSegmentedControl(
+                        options: TimeDisplayFormat.allCases,
+                        title: \.title,
+                        selection: Binding(
+                            get: { selectedTimeFormat },
+                            set: { timeFormatRawValue = $0.rawValue }
+                        )
+                    )
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -91,20 +108,13 @@ struct SettingsView: View {
         }
         .padding(AppTheme.spacingLG)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.surface)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                .stroke(AppTheme.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+        .cardSurface(cornerRadius: AppTheme.cornerRadiusXL)
     }
 
     private var projectsSection: some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
+        VStack(alignment: .leading, spacing: AppTheme.spacingMD) {
             HStack {
-                Text("Projects")
-                    .font(.title3.weight(.bold))
-                    .foregroundColor(AppTheme.textPrimary)
+                AppTheme.sectionLabel("Projects")
 
                 Spacer()
 
@@ -112,76 +122,68 @@ struct SettingsView: View {
                     editingTarget = ProjectEditorTarget(project: nil)
                 } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundColor(AppTheme.textPrimary)
                         .frame(width: 28, height: 28)
-                        .background(AppTheme.surfaceMuted)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.glassCircle())
+                .help("New Project")
             }
 
-            ForEach(viewModel.projects) { project in
-                Button {
-                    edit(project)
-                } label: {
-                    HStack(spacing: AppTheme.spacingMD) {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color(hex: project.colorHex))
-                            .frame(width: 32, height: 32)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(project.name)
-                                .font(.title3.weight(.semibold))
-                                .foregroundColor(AppTheme.textPrimary)
-                                .lineLimit(1)
-
-                            if !project.scope.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                Text(project.scope)
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                    .foregroundColor(AppTheme.textSecondary)
-                                    .lineLimit(1)
-                            }
-                        }
-
-                        Spacer()
-                    }
-                    .contentShape(Rectangle())
+            VStack(spacing: AppTheme.spacingSM) {
+                ForEach(viewModel.projects) { project in
+                    projectRow(project)
                 }
-                .buttonStyle(.plain)
-                .overlay(alignment: .trailing) {
-                    Button(role: .destructive) {
-                        viewModel.deleteProject(project)
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.system(size: 13, weight: .semibold))
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundColor(AppTheme.textSecondary)
-                    .padding(.trailing, AppTheme.spacingMD)
-                }
-                .padding(.horizontal, AppTheme.spacingMD)
-                .padding(.vertical, AppTheme.spacingSM)
-                .background(AppTheme.surfaceMuted)
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium)
-                        .stroke(AppTheme.border, lineWidth: 1)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium))
             }
         }
         .padding(AppTheme.spacingLG)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.surface)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                .stroke(AppTheme.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+        .cardSurface(cornerRadius: AppTheme.cornerRadiusXL)
+    }
+
+    private func projectRow(_ project: Project) -> some View {
+        let tint = Color(hex: project.colorHex)
+
+        return Button {
+            edit(project)
+        } label: {
+            HStack(spacing: AppTheme.spacingMD) {
+                Circle()
+                    .fill(tint)
+                    .frame(width: 14, height: 14)
+                    .shadow(color: tint.opacity(0.7), radius: 5)
+                    .frame(width: 28, height: 28)
+                    .background(tint.opacity(0.14), in: Circle())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(project.name)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundColor(AppTheme.textPrimary)
+                        .lineLimit(1)
+
+                    if !project.scope.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(project.scope)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(AppTheme.textSecondary)
+                            .lineLimit(1)
+                    }
+                }
+
+                Spacer(minLength: 44)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .overlay(alignment: .trailing) {
+            DeleteProjectButton {
+                projectPendingDeletion = project
+            }
+        }
+        .padding(.leading, AppTheme.spacingSM)
+        .padding(.trailing, AppTheme.spacingSM)
+        .padding(.vertical, AppTheme.spacingSM)
+        .cardSurface(cornerRadius: AppTheme.cornerRadiusLarge, fill: AppTheme.surface.opacity(0.7))
+        .hoverHighlight(cornerRadius: AppTheme.cornerRadiusLarge)
     }
 
     private func edit(_ project: Project) {
@@ -194,6 +196,71 @@ struct SettingsView: View {
 
     private var selectedTimeFormat: TimeDisplayFormat {
         TimeDisplayFormat(rawValue: timeFormatRawValue) ?? .twentyFourHour
+    }
+}
+
+/// Segmented control matching the app's glass chrome, with a sliding selection pill.
+private struct GlassSegmentedControl<Option: Hashable>: View {
+    let options: [Option]
+    let title: KeyPath<Option, String>
+    @Binding var selection: Option
+
+    @Namespace private var namespace
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(options, id: \.self) { option in
+                let isSelected = option == selection
+
+                Button {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                        selection = option
+                    }
+                } label: {
+                    Text(option[keyPath: title])
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundColor(isSelected ? AppTheme.onAccent : AppTheme.textSecondary)
+                        .padding(.horizontal, 14)
+                        .frame(height: 28)
+                        .background {
+                            if isSelected {
+                                Capsule(style: .continuous)
+                                    .fill(AppTheme.accent)
+                                    .matchedGeometryEffect(id: "segment", in: namespace)
+                            }
+                        }
+                        .contentShape(Capsule(style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(3)
+        .glassSurface(in: Capsule(style: .continuous))
+        .fixedSize()
+    }
+}
+
+/// Trash button that only turns red while hovered, so the list stays calm.
+private struct DeleteProjectButton: View {
+    let action: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(role: .destructive, action: action) {
+            Image(systemName: "trash")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(isHovered ? AppTheme.danger : AppTheme.textSecondary)
+                .frame(width: 30, height: 30)
+                .background(isHovered ? AppTheme.danger.opacity(0.14) : Color.clear, in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .help("Delete Project")
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.12)) {
+                isHovered = hovering
+            }
+        }
     }
 }
 

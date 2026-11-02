@@ -9,25 +9,28 @@ struct EntryRowView: View {
     var body: some View {
         HStack(spacing: AppTheme.spacingSM) {
             Button(action: onEdit) {
-                HStack(spacing: AppTheme.spacingSM) {
-                    Text(entry.name)
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundColor(AppTheme.textPrimary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .layoutPriority(2)
+                HStack(spacing: AppTheme.spacingMD) {
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        .fill(projectTint)
+                        .frame(width: 3, height: 28)
+                        .shadow(color: projectTint.opacity(0.6), radius: 4)
 
-                    HStack(spacing: AppTheme.spacingSM) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(entry.name)
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundColor(AppTheme.textPrimary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+
                         projectLabel
                     }
-                    .lineLimit(1)
-                    .truncationMode(.tail)
                     .layoutPriority(1)
 
                     Spacer(minLength: AppTheme.spacingXS)
 
                     Text(entry.formattedDuration)
-                        .font(.system(size: 16, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .monospacedDigit()
                         .foregroundColor(AppTheme.textPrimary)
                         .lineLimit(1)
                         .frame(width: 100, alignment: .trailing)
@@ -43,44 +46,38 @@ struct EntryRowView: View {
                 Button("Delete", role: .destructive, action: onDelete)
             } label: {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(AppTheme.textPrimary)
-                    .frame(width: 20, height: 30)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(AppTheme.textSecondary)
+                    .frame(width: 24, height: 30)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .frame(width: 20, alignment: .trailing)
+            .frame(width: 24, alignment: .trailing)
         }
         .padding(.horizontal, AppTheme.spacingMD)
-        .padding(.vertical, AppTheme.spacingMD)
-        .background(AppTheme.surface)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                .stroke(AppTheme.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+        .padding(.vertical, 12)
+        .cardSurface(cornerRadius: AppTheme.cornerRadiusLarge)
+        .hoverHighlight(cornerRadius: AppTheme.cornerRadiusLarge)
+    }
+
+    private var projectTint: Color {
+        Color(hex: project?.colorHex ?? "#6F6F6F")
     }
 
     @ViewBuilder
     private var projectLabel: some View {
-        if let project {
-            HStack(spacing: AppTheme.spacingXS) {
-                Circle()
-                    .fill(Color(hex: project.colorHex))
-                    .frame(width: 7, height: 7)
-                Text(project.name)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-            }
-            .font(.system(size: 15, weight: .medium))
-            .foregroundColor(AppTheme.textSecondary)
-        } else {
-            Text("No Project")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(AppTheme.textSecondary)
+        HStack(spacing: AppTheme.spacingXS) {
+            Text(project?.name ?? "No Project")
                 .lineLimit(1)
                 .truncationMode(.tail)
-        }
-    }
 
+            if !entry.notes.isEmpty {
+                Image(systemName: "text.alignleft")
+                    .font(.system(size: 10, weight: .semibold))
+                    .help(entry.notes)
+            }
+        }
+        .font(.system(size: 12, weight: .medium, design: .rounded))
+        .foregroundColor(AppTheme.textSecondary)
+    }
 }

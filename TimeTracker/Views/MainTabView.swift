@@ -41,7 +41,7 @@ struct MainTabView: View {
             let isCompact = geometry.size.width < 640
 
             ZStack {
-                AppTheme.primary.ignoresSafeArea()
+                AppBackdrop()
 
                 if hasProjects {
                     VStack(spacing: 0) {
@@ -51,8 +51,11 @@ struct MainTabView: View {
                             openMiniPlayer: openMiniPlayer
                         )
                         currentSectionView
+                            .id(selectedSection)
+                            .transition(.opacity)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
+                    .animation(.easeInOut(duration: 0.18), value: selectedSection)
                 } else {
                     SetupRequiredView()
                 }
@@ -95,71 +98,75 @@ private struct AppChromeBar: View {
     let isCompact: Bool
     let openMiniPlayer: () -> Void
 
+    @Namespace private var selectionNamespace
+
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: AppTheme.spacingMD) {
-                if !isCompact {
-                    miniPlayerButton
-                }
-
-                Spacer()
-
-                if !isCompact {
-                    HStack(spacing: AppTheme.spacingSM) {
-                        ForEach(AppSection.allCases) { section in
-                            Button(action: { selectedSection = section }) {
-                                Image(systemName: section.systemImage)
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(
-                                        selectedSection == section
-                                            ? AppTheme.primary
-                                            : AppTheme.textSecondary
-                                    )
-                                    .frame(width: 34, height: 34)
-                                    .background(
-                                        selectedSection == section
-                                            ? AppTheme.accent
-                                            : AppTheme.surface
-                                    )
-                                    .clipShape(Circle())
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-
-                if isCompact {
-                    miniPlayerButton
-
-                    Menu {
-                        ForEach(AppSection.allCases) { section in
-                            Button {
-                                selectedSection = section
-                            } label: {
-                                Label(section.title, systemImage: section.systemImage)
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(AppTheme.textPrimary)
-                            .frame(width: 34, height: 34)
-                            .background(AppTheme.surface)
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                }
+        HStack(spacing: AppTheme.spacingMD) {
+            if !isCompact {
+                miniPlayerButton
             }
-            .padding(.leading, AppTheme.spacingMD)
-            .padding(.trailing, AppTheme.spacingMD)
-            .padding(.top, AppTheme.spacingSM)
-            .padding(.bottom, AppTheme.spacingSM)
 
-            Rectangle()
-                .fill(AppTheme.border)
-                .frame(height: 1)
+            Spacer()
+
+            if !isCompact {
+                sectionSwitcher
+            }
+
+            if isCompact {
+                miniPlayerButton
+
+                Menu {
+                    ForEach(AppSection.allCases) { section in
+                        Button {
+                            selectedSection = section
+                        } label: {
+                            Label(section.title, systemImage: section.systemImage)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(AppTheme.textPrimary)
+                        .frame(width: 34, height: 34)
+                        .glassSurface(in: Circle())
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .background(AppTheme.primary)
+        .padding(.horizontal, AppTheme.spacingMD)
+        .padding(.top, AppTheme.spacingXS)
+        .padding(.bottom, AppTheme.spacingSM)
+    }
+
+    private var sectionSwitcher: some View {
+        HStack(spacing: 2) {
+            ForEach(AppSection.allCases) { section in
+                let isSelected = selectedSection == section
+
+                Button {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                        selectedSection = section
+                    }
+                } label: {
+                    Image(systemName: section.systemImage)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(isSelected ? AppTheme.onAccent : AppTheme.textSecondary)
+                        .frame(width: 40, height: 30)
+                        .background {
+                            if isSelected {
+                                Capsule(style: .continuous)
+                                    .fill(AppTheme.accent)
+                                    .matchedGeometryEffect(id: "selection", in: selectionNamespace)
+                            }
+                        }
+                        .contentShape(Capsule(style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .help(section.title)
+            }
+        }
+        .padding(4)
+        .glassSurface(in: Capsule(style: .continuous))
     }
 
     private var miniPlayerButton: some View {
@@ -168,10 +175,8 @@ private struct AppChromeBar: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(AppTheme.textSecondary)
                 .frame(width: 34, height: 34)
-                .background(AppTheme.surface)
-                .clipShape(Circle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glassCircle())
         .help("Mini Player")
     }
 }

@@ -33,11 +33,11 @@ struct AddEntrySheet: View {
 
     var body: some View {
         ZStack {
-            AppTheme.primary.ignoresSafeArea()
+            AppBackdrop()
 
             VStack(spacing: 0) {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
+                    VStack(alignment: .leading, spacing: AppTheme.spacingMD) {
                         topBar
                         nameHeader
                         notesSection
@@ -50,7 +50,7 @@ struct AddEntrySheet: View {
                     .padding(.bottom, AppTheme.spacingMD)
                 }
 
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
+                Rectangle()
                     .fill(AppTheme.border)
                     .frame(height: 1)
 
@@ -58,12 +58,6 @@ struct AddEntrySheet: View {
             }
             .frame(width: 680)
             .frame(minHeight: 640, maxHeight: 760)
-            .background(AppTheme.primary)
-            .clipShape(RoundedRectangle(cornerRadius: 22))
-            .overlay(
-                RoundedRectangle(cornerRadius: 22)
-                    .stroke(AppTheme.border, lineWidth: 1)
-            )
         }
         .frame(minWidth: 660, minHeight: 640)
         .onAppear {
@@ -88,19 +82,19 @@ struct AddEntrySheet: View {
 
     private var topBar: some View {
         HStack {
+            AppTheme.sectionLabel(editingEntry == nil ? "New Recording" : "Edit Recording")
+
             Spacer()
 
             Button {
                 dismiss()
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(AppTheme.textSecondary)
                     .frame(width: 30, height: 30)
-                    .background(AppTheme.surfaceMuted)
-                    .clipShape(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassCircle())
         }
     }
 
@@ -110,24 +104,23 @@ struct AddEntrySheet: View {
                 "",
                 text: $name,
                 prompt: Text(autoNameHint)
-                    .foregroundColor(AppTheme.textSecondary.opacity(0.58))
+                    .foregroundColor(AppTheme.textTertiary)
             )
             .textFieldStyle(.plain)
-            .font(.system(size: 30, weight: .bold, design: .rounded))
+            .font(.system(size: 28, weight: .bold, design: .rounded))
             .foregroundColor(AppTheme.textPrimary)
             .focused($focusedField, equals: .name)
 
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                .fill(AppTheme.border)
+            Rectangle()
+                .fill(focusedField == .name ? AppTheme.highlight : AppTheme.border)
                 .frame(height: 1)
+                .animation(.easeOut(duration: 0.15), value: focusedField)
         }
     }
 
     private var projectSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
-            Text("Project")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundColor(AppTheme.textSecondary)
+            AppTheme.sectionLabel("Project")
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AppTheme.spacingSM) {
@@ -155,49 +148,52 @@ struct AddEntrySheet: View {
 
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
-            Text("Date")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundColor(AppTheme.textSecondary)
+            AppTheme.sectionLabel("Date")
 
             TextField(datePlaceholder, text: $dateInput)
                 .textFieldStyle(.plain)
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .monospacedDigit()
                 .foregroundColor(AppTheme.textPrimary)
                 .padding(.horizontal, AppTheme.spacingMD)
-                .padding(.vertical, 14)
-                .background(AppTheme.surfaceMuted)
+                .padding(.vertical, 13)
+                .fieldSurface(cornerRadius: AppTheme.cornerRadiusLarge, isFocused: focusedField == .date)
                 .overlay(
-                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                        .stroke(isDateValid ? AppTheme.border : Color.red.opacity(0.55), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                        .strokeBorder(AppTheme.danger.opacity(isDateValid ? 0 : 0.6), lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
                 .focused($focusedField, equals: .date)
         }
     }
 
     private var rangeSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
-            Text("Worked Hours")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundColor(AppTheme.textSecondary)
+            AppTheme.sectionLabel("Worked Hours")
 
             WorkRangeDial(
                 startMinutes: $startMinutes,
                 endMinutes: $endMinutes,
-                timeFormatter: timeFormatter
+                timeFormatter: timeFormatter,
+                tint: Color(hex: selectedProject?.colorHex ?? "#F5F5F7")
             )
             .frame(maxWidth: .infinity)
+            .padding(AppTheme.spacingLG)
+            .cardSurface(cornerRadius: AppTheme.cornerRadiusXL, fill: AppTheme.surface.opacity(0.6))
         }
     }
 
     private var footer: some View {
         HStack(spacing: AppTheme.spacingSM) {
-            Button("Cancel") {
+            Button {
                 dismiss()
+            } label: {
+                Text("Cancel")
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundColor(AppTheme.textPrimary)
+                    .frame(width: 120, height: 40)
             }
+            .buttonStyle(.glassCapsule())
             .keyboardShortcut(.cancelAction)
-            .buttonStyle(.bordered)
-            .frame(minWidth: 120)
 
             Spacer()
 
@@ -208,17 +204,17 @@ struct AddEntrySheet: View {
                     editingEntry == nil ? "Add Recording" : "Save Recording",
                     systemImage: editingEntry == nil ? "plus" : "checkmark"
                 )
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundColor(AppTheme.onAccent)
+                .frame(width: 190, height: 40)
             }
+            .buttonStyle(.glassCapsule(tint: AppTheme.accent.opacity(0.92)))
             .keyboardShortcut(.defaultAction)
-            .buttonStyle(.borderedProminent)
-            .tint(AppTheme.accent)
-            .foregroundColor(AppTheme.primary)
-            .frame(minWidth: 190)
             .disabled(projectId == nil || !isDateValid || workedDurationMinutes <= 0)
         }
+        .glassGroup(spacing: AppTheme.spacingSM)
         .padding(.horizontal, AppTheme.spacingLG)
         .padding(.vertical, AppTheme.spacingMD)
-        .background(AppTheme.primary)
     }
 
     private var trimmedName: String {
@@ -338,6 +334,7 @@ private struct WorkRangeDial: View {
     @Binding var startMinutes: Int
     @Binding var endMinutes: Int
     let timeFormatter: DateFormatter
+    var tint: Color = AppTheme.accent
 
     @State private var activeHandle: Handle?
 
@@ -374,19 +371,18 @@ private struct WorkRangeDial: View {
                     RangeArcShape(startMinutes: startMinutes, endMinutes: endMinutes, totalMinutes: totalMinutes)
                         .stroke(
                             LinearGradient(
-                                colors: [
-                                    AppTheme.textPrimary.opacity(0.95),
-                                    AppTheme.accent.opacity(0.88)
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
+                                colors: [tint.opacity(0.95), tint.opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             ),
                             style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round)
                         )
+                        .shadow(color: tint.opacity(0.45), radius: 10)
                         .frame(width: radius * 2, height: radius * 2)
 
                     Circle()
-                        .fill(AppTheme.surface.opacity(0.94))
+                        .fill(AppTheme.surface)
+                        .overlay(Circle().strokeBorder(AppTheme.edgeHighlight, lineWidth: 1))
                         .frame(width: radius * 2 - lineWidth - 20, height: radius * 2 - lineWidth - 20)
 
                     innerClockLabels(radius: radius - lineWidth * 0.78, center: center)
@@ -413,8 +409,9 @@ private struct WorkRangeDial: View {
                     .foregroundColor(AppTheme.textSecondary)
 
                 Text(workedDurationText)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .semibold, design: .rounded))
                     .monospacedDigit()
+                    .numericTextTransition()
                     .foregroundColor(AppTheme.textPrimary)
             }
             .frame(maxWidth: .infinity)
@@ -437,7 +434,7 @@ private struct WorkRangeDial: View {
             ForEach(0..<96, id: \.self) { index in
                 let minute = index * 15
                 Circle()
-                    .fill(isMinuteWithinRange(minute) ? AppTheme.textPrimary.opacity(0.9) : AppTheme.border.opacity(0.9))
+                    .fill(isMinuteWithinRange(minute) ? tint.opacity(0.9) : AppTheme.textTertiary.opacity(0.5))
                     .frame(width: index.isMultiple(of: 4) ? 4 : 2.5, height: index.isMultiple(of: 4) ? 4 : 2.5)
                     .position(position(for: minute, center: center, radius: radius))
             }
@@ -469,10 +466,10 @@ private struct WorkRangeDial: View {
         let handleRadius = max(14, radius * 0.12)
 
         Circle()
-            .fill(handle == .start ? AppTheme.textPrimary : AppTheme.surfaceAlt)
+            .fill(handle == .start ? AppTheme.textPrimary : tint)
             .overlay(
                 Circle()
-                    .stroke(AppTheme.primary.opacity(0.55), lineWidth: 1)
+                    .strokeBorder(Color.white.opacity(0.6), lineWidth: 1.5)
             )
             .frame(width: handleRadius * 1.45, height: handleRadius * 1.45)
             .shadow(color: .black.opacity(isActive ? 0.28 : 0.18), radius: isActive ? 12 : 8, x: 0, y: 4)
@@ -565,7 +562,7 @@ private struct WorkRangeDial: View {
                 .textCase(.uppercase)
 
             Text(value)
-                .font(.system(size: 21, weight: .bold, design: .rounded))
+                .font(.system(size: 21, weight: .semibold, design: .rounded))
                 .monospacedDigit()
                 .foregroundColor(AppTheme.textPrimary)
         }
@@ -616,34 +613,26 @@ struct RecordingNotesEditor: View {
             isExpanded: $isExpanded,
             content: {
                 TextEditor(text: $notes)
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundColor(AppTheme.textPrimary)
                     .scrollContentBackground(.hidden)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
                     .frame(minHeight: 96, maxHeight: 118)
-                    .background(AppTheme.surfaceMuted)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge)
-                            .stroke(AppTheme.border, lineWidth: 1)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge))
+                    .fieldSurface(cornerRadius: AppTheme.cornerRadiusLarge)
                     .padding(.top, AppTheme.spacingXS)
             },
             label: {
                 HStack(spacing: AppTheme.spacingXS) {
-                    Text("Notes")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundColor(AppTheme.textSecondary)
+                    AppTheme.sectionLabel("Notes")
 
                     if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         Text("Added")
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
                             .foregroundColor(AppTheme.textPrimary)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(AppTheme.surfaceMuted)
-                            .clipShape(Capsule())
+                            .background(AppTheme.surfaceAlt, in: Capsule())
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

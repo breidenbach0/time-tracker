@@ -22,23 +22,31 @@ struct MacWindowConfigurator: NSViewRepresentable {
         window.styleMask.insert(.fullSizeContentView)
         window.minSize = minimumSize
         window.contentMinSize = minimumSize
-        window.backgroundColor = NSColor(AppTheme.primary)
-        window.isOpaque = true
+        // Transparent window; `AppBackdrop` draws the blurred glass behind the content.
+        window.backgroundColor = .clear
+        window.isOpaque = false
 
         if #available(macOS 11.0, *) {
             window.titlebarSeparatorStyle = .none
         }
+    }
+}
 
-        tintTitlebarContainer(in: window)
+/// Blurs whatever sits behind the window. Kept active so the glass doesn't turn flat grey
+/// when the window loses focus.
+struct WindowGlassBackground: NSViewRepresentable {
+    var material: NSVisualEffectView.Material = .hudWindow
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
     }
 
-    private func tintTitlebarContainer(in window: NSWindow) {
-        guard let titlebarContainer = window.standardWindowButton(.closeButton)?.superview else {
-            return
-        }
-
-        titlebarContainer.wantsLayer = true
-        titlebarContainer.layer?.backgroundColor = NSColor(AppTheme.primary).cgColor
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
     }
 }
 
@@ -95,6 +103,7 @@ struct MiniPlayerWindowConfigurator: NSViewRepresentable {
         window.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary]
         window.backgroundColor = .clear
         window.isOpaque = false
+        // The capsule draws its own soft shadow inside the padded frame.
         window.hasShadow = false
         window.minSize = playerSize
         window.maxSize = playerSize
