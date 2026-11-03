@@ -13,7 +13,8 @@ cd "$ROOT_DIR"
 PROJECT_PATH="$ROOT_DIR/TimeTracker.xcodeproj"
 SCHEME="TimeTracker"
 CONFIGURATION="${CONFIGURATION:-Release}"
-DERIVED_DATA_PATH="$ROOT_DIR/build/DerivedData"
+# Spotlight skips ".noindex" folders, so the build doesn't show up next to the installed app.
+DERIVED_DATA_PATH="$ROOT_DIR/build/DerivedData.noindex"
 DIST_DIR="$ROOT_DIR/dist"
 BUILD_LOG="$ROOT_DIR/build/xcodebuild.log"
 
@@ -49,6 +50,8 @@ if [[ ! -d "$APP_PATH" ]]; then
   exit 1
 fi
 VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP_PATH/Contents/Info.plist")"
+# xcodebuild registers what it builds with Launch Services; only the installed copy should be.
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -u "$APP_PATH" || true
 
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
