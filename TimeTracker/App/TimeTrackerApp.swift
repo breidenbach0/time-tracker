@@ -2,7 +2,6 @@ import SwiftUI
 
 @main
 struct TimeTrackerApp: App {
-    @StateObject private var timerViewModel = TimerViewModel.shared
     @StateObject private var updater = Updater.shared
 
     /// Unit tests run inside the app. They bring their own databases, so the app itself opens
@@ -22,7 +21,6 @@ struct TimeTrackerApp: App {
             } else {
                 MainTabView()
                     .frame(minWidth: 620, minHeight: 700)
-                    .environmentObject(timerViewModel)
                     .preferredColorScheme(.dark)
                     .configureMacWindow()
             }
@@ -34,8 +32,12 @@ struct TimeTrackerApp: App {
         }
 
         WindowGroup(id: "miniplayer") {
-            MiniPlayerView()
-                .environmentObject(timerViewModel)
+            // macOS can restore this window on launch, tests included.
+            if Self.isRunningUnitTests {
+                Color.clear
+            } else {
+                MiniPlayerView()
+            }
         }
         .windowResizability(.contentSize)
         .defaultSize(width: 680, height: 74)

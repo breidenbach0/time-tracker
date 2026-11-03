@@ -40,6 +40,7 @@
 		C8647E009F5CE86F056BB68B /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652C6C21A0EDD2713CBA8AC6 /* AppTheme.swift */; };
 		D22965B9985CA6C7C75548D7 /* UpdateCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3765351C075C4799C1A878A8 /* UpdateCard.swift */; };
 		F4E12DF84C83D69D18156DC5 /* RecordingsCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCBAA4189581E93C469385F3 /* RecordingsCalendarView.swift */; };
+		F6916BE2554DCD5AA5E28C5C /* StorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973C3DE4A6C7F9B73E7C8573 /* StorageTests.swift */; };
 		F8B93D3370801804314691A2 /* EntriesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8826785C648071C0719D9893 /* EntriesListView.swift */; };
 		FE6DB63EE18FEF2739EDF31F /* TimeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 079E4EE3710D229304251229 /* TimeEntry.swift */; };
 /* End PBXBuildFile section */
@@ -75,6 +76,7 @@
 		90C38BAFD3EA89F8C7DE23FE /* EntryRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRowView.swift; sourceTree = "<group>"; };
 		967D811820C97F9D3FC79B9F /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		97305BB0B300C88D321D3883 /* TimeTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		973C3DE4A6C7F9B73E7C8573 /* StorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageTests.swift; sourceTree = "<group>"; };
 		A01BF78649713E76816B918F /* WorkRangeDial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkRangeDial.swift; sourceTree = "<group>"; };
 		A03447F1DE12491D0F1F8350 /* WorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStore.swift; sourceTree = "<group>"; };
 		A4102CA079872253AFDAABE4 /* WorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceView.swift; sourceTree = "<group>"; };
@@ -190,6 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				55F784A5BC6BB92350A02F13 /* DatabaseMigrationTests.swift */,
+				973C3DE4A6C7F9B73E7C8573 /* StorageTests.swift */,
 				C111E01F2916BDB08CAE7383 /* UpdaterTests.swift */,
 				D7F10D675A0014DCF83B95FE /* WorkspaceStoreTests.swift */,
 			);
@@ -413,6 +416,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				25AC18DA41265E17C6A82608 /* DatabaseMigrationTests.swift in Sources */,
+				F6916BE2554DCD5AA5E28C5C /* StorageTests.swift in Sources */,
 				B523353316DEC2D8FAE8C2CB /* UpdaterTests.swift in Sources */,
 				5E0FC1682177FD02C4013F3E /* WorkspaceStoreTests.swift in Sources */,
 			);

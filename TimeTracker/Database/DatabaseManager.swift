@@ -6,27 +6,38 @@ enum DatabaseError: Error {
 }
 
 final class DatabaseManager {
-    static let rootDirectoryURL: URL = {
-        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        return documentsURL.appendingPathComponent("TimeTracker", isDirectory: true)
-    }()
+    /// Where the database lives. Not in Documents: iCloud may sync that folder while the file is
+    /// open, and macOS asks before an app may read it.
+    static let databaseDirectoryURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("TimeTracker/Database", isDirectory: true)
+    static let defaultDatabaseURL = databaseDirectoryURL.appendingPathComponent("timetracker.sqlite3")
 
-    static let exportsDirectoryURL = rootDirectoryURL.appendingPathComponent("exported", isDirectory: true)
-    static let databaseDirectoryURL = rootDirectoryURL.appendingPathComponent("database", isDirectory: true)
+    /// Where earlier versions kept the database, newest first.
+    static var legacyDatabaseURLs: [URL] {
+        let fileManager = FileManager.default
+        let documents = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let applicationSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return [
+            documents.appendingPathComponent("TimeTracker/database/timetracker.sqlite3"),
+            applicationSupport.appendingPathComponent("TimeTracker/timetracker.sqlite3"),
+            documents.appendingPathComponent("timetracker.sqlite3")
+        ]
+    }
 
-    static let defaultDatabaseURL: URL = {
-        ensureStorageDirectories()
-        return databaseDirectoryURL.appendingPathComponent("timetracker.sqlite3")
-    }()
-    static let shared = DatabaseManager()
+    static let shared = DatabaseManager(legacyTimerDefaults: .standard)
 
     private let databaseURL: URL
     private var db: Connection?
+
+    /// Earlier versions kept a running timer here; it's moved into the database once.
+    private let legacyTimerDefaults: UserDefaults?
 
     private let projects = Table("projects")
     private let categories = Table("categories")
     private let timeEntries = Table("time_entries")
     private let famousNames = Table("famous_names")
+    /// At most one row: the recording that's running.
+    private let runningTimers = Table("running_timer")
 
     private let id = SQLite.Expression<Int64>("id")
     private let name = SQLite.Expression<String>("name")
@@ -56,52 +67,60 @@ final class DatabaseManager {
         "Francisco Franco"
     ]
 
-    init(databaseURL: URL = DatabaseManager.defaultDatabaseURL) {
+    init(databaseURL: URL = DatabaseManager.defaultDatabaseURL, legacyTimerDefaults: UserDefaults? = nil) {
         self.databaseURL = databaseURL
+        self.legacyTimerDefaults = legacyTimerDefaults
         setupDatabase()
     }
 
-    static func ensureStorageDirectories(fileManager: FileManager = .default) {
-        try? fileManager.createDirectory(at: rootDirectoryURL, withIntermediateDirectories: true)
-        try? fileManager.createDirectory(at: exportsDirectoryURL, withIntermediateDirectories: true)
-        try? fileManager.createDirectory(at: databaseDirectoryURL, withIntermediateDirectories: true)
-    }
-
     static func prepareStorageIfNeeded(fileManager: FileManager = .default) {
-        ensureStorageDirectories(fileManager: fileManager)
-        migrateLegacyDatabaseIfNeeded(fileManager: fileManager)
+        try? fileManager.createDirectory(at: databaseDirectoryURL, withIntermediateDirectories: true)
+        migrateLegacyDatabaseIfNeeded(to: defaultDatabaseURL, from: legacyDatabaseURLs, fileManager: fileManager)
     }
 
-    private static func migrateLegacyDatabaseIfNeeded(fileManager: FileManager) {
-        let destinationURL = defaultDatabaseURL
-        guard !fileManager.fileExists(atPath: destinationURL.path) else { return }
+    /// Copies the first database in `candidates` that exists to `destination`, unless there's
+    /// one there already. The original stays where it was, as a backup. Returns what was copied.
+    @discardableResult
+    static func migrateLegacyDatabaseIfNeeded(
+        to destination: URL,
+        from candidates: [URL],
+        fileManager: FileManager = .default
+    ) -> URL? {
+        guard !fileManager.fileExists(atPath: destination.path) else { return nil }
 
-        let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("TimeTracker/timetracker.sqlite3")
-        let legacyDocumentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("timetracker.sqlite3")
-
-        for sourceURL in [appSupportURL, legacyDocumentsURL] {
-            guard fileManager.fileExists(atPath: sourceURL.path) else { continue }
-            copyDatabaseBundle(from: sourceURL, to: destinationURL, fileManager: fileManager)
-            break
-        }
-    }
-
-    private static func copyDatabaseBundle(from sourceURL: URL, to destinationURL: URL, fileManager: FileManager) {
-        let suffixes = ["", "-shm", "-wal"]
-
-        for suffix in suffixes {
-            let sourceComponent = URL(fileURLWithPath: sourceURL.path + suffix)
-            let destinationComponent = URL(fileURLWithPath: destinationURL.path + suffix)
-
-            guard fileManager.fileExists(atPath: sourceComponent.path) else { continue }
-
-            do {
-                try fileManager.copyItem(at: sourceComponent, to: destinationComponent)
-            } catch {
-                print("Database migration error for \(sourceComponent.lastPathComponent): \(error)")
+        for source in candidates where fileManager.fileExists(atPath: source.path) {
+            if copyDatabaseBundle(from: source, to: destination, fileManager: fileManager) {
+                return source
             }
+        }
+        return nil
+    }
+
+    /// Copies the database and any journal files beside it. The database file goes last and
+    /// under a temporary name first, so a half-finished copy is never mistaken for a database.
+    private static func copyDatabaseBundle(from sourceURL: URL, to destinationURL: URL, fileManager: FileManager) -> Bool {
+        let partialURL = URL(fileURLWithPath: destinationURL.path + ".partial")
+
+        do {
+            try fileManager.createDirectory(at: destinationURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            for suffix in ["-shm", "-wal"] {
+                let source = URL(fileURLWithPath: sourceURL.path + suffix)
+                let destination = URL(fileURLWithPath: destinationURL.path + suffix)
+                guard fileManager.fileExists(atPath: source.path) else { continue }
+                try? fileManager.removeItem(at: destination)
+                try fileManager.copyItem(at: source, to: destination)
+            }
+            try? fileManager.removeItem(at: partialURL)
+            try fileManager.copyItem(at: sourceURL, to: partialURL)
+            try fileManager.moveItem(at: partialURL, to: destinationURL)
+            return true
+        } catch {
+            print("Database migration error copying \(sourceURL.path): \(error)")
+            try? fileManager.removeItem(at: partialURL)
+            for suffix in ["-shm", "-wal"] {
+                try? fileManager.removeItem(at: URL(fileURLWithPath: destinationURL.path + suffix))
+            }
+            return false
         }
     }
 
@@ -151,6 +170,16 @@ final class DatabaseManager {
         if schemaVersion < 6 {
             try migrateToV6()
             try setSchemaVersion(6)
+        }
+
+        if schemaVersion < 7 {
+            try migrateToV7()
+            try setSchemaVersion(7)
+        }
+
+        if schemaVersion < 8 {
+            try migrateToV8()
+            try setSchemaVersion(8)
         }
     }
 
@@ -318,6 +347,30 @@ final class DatabaseManager {
                 value TEXT NOT NULL
             )
             """)
+    }
+
+    /// Recordings are read newest first, and per project.
+    private func migrateToV7() throws {
+        try db?.run("CREATE INDEX IF NOT EXISTS time_entries_by_start ON time_entries (start_date)")
+        try db?.run("CREATE INDEX IF NOT EXISTS time_entries_by_project_and_start ON time_entries (project_id, start_date)")
+    }
+
+    /// The running timer moves out of UserDefaults, so all of a recording lives in one place.
+    private func migrateToV8() throws {
+        try db?.run("""
+            CREATE TABLE IF NOT EXISTS running_timer (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                name TEXT NOT NULL,
+                notes TEXT NOT NULL DEFAULT '',
+                project_id INTEGER NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
+                start_date TEXT NOT NULL
+            )
+            """)
+
+        guard let legacyTimerDefaults, let state = Self.legacyRunningTimer(in: legacyTimerDefaults) else { return }
+        // Only forget the old copy once the new one is saved.
+        try writeRunningTimer(state)
+        Self.removeLegacyRunningTimer(from: legacyTimerDefaults)
     }
 
     private func createFamousNamesTable() throws {
@@ -656,32 +709,75 @@ final class DatabaseManager {
     // MARK: - Running Timer State
 
     func saveRunningTimer(_ state: RunningTimerState) {
-        UserDefaults.standard.set(state.name, forKey: "running_timer_name")
-        UserDefaults.standard.set(state.notes, forKey: "running_timer_notes")
-        UserDefaults.standard.set(state.projectId, forKey: "running_timer_projectId")
-        UserDefaults.standard.set(state.startDate, forKey: "running_timer_startDate")
+        do {
+            try writeRunningTimer(state)
+        } catch {
+            print("Save running timer error: \(error)")
+        }
     }
 
     func runningTimer() -> RunningTimerState? {
-        guard UserDefaults.standard.object(forKey: "running_timer_projectId") != nil,
-              let startDate = UserDefaults.standard.object(forKey: "running_timer_startDate") as? Date else {
+        do {
+            guard let row = try connection().pluck(runningTimers.filter(id == 1)) else { return nil }
+            return RunningTimerState(
+                name: row[name],
+                notes: row[notes],
+                projectId: row[projectId],
+                startDate: row[startDate]
+            )
+        } catch {
+            print("Read running timer error: \(error)")
+            return nil
+        }
+    }
+
+    func clearRunningTimer() {
+        do {
+            try connection().run(runningTimers.delete())
+        } catch {
+            print("Clear running timer error: \(error)")
+        }
+    }
+
+    private func writeRunningTimer(_ state: RunningTimerState) throws {
+        try connection().run(runningTimers.insert(
+            or: .replace,
+            id <- 1,
+            name <- state.name,
+            notes <- state.notes,
+            projectId <- state.projectId,
+            startDate <- state.startDate
+        ))
+    }
+
+    private static let legacyTimerKeys = (
+        name: "running_timer_name",
+        notes: "running_timer_notes",
+        projectId: "running_timer_projectId",
+        categoryId: "running_timer_categoryId",
+        startDate: "running_timer_startDate"
+    )
+
+    /// A running timer as version 1.0 saved it.
+    static func legacyRunningTimer(in defaults: UserDefaults) -> RunningTimerState? {
+        let keys = legacyTimerKeys
+        guard defaults.object(forKey: keys.projectId) != nil,
+              let startDate = defaults.object(forKey: keys.startDate) as? Date else {
             return nil
         }
 
         return RunningTimerState(
-            name: UserDefaults.standard.string(forKey: "running_timer_name") ?? "",
-            notes: UserDefaults.standard.string(forKey: "running_timer_notes") ?? "",
-            projectId: Int64(UserDefaults.standard.integer(forKey: "running_timer_projectId")),
+            name: defaults.string(forKey: keys.name) ?? "",
+            notes: defaults.string(forKey: keys.notes) ?? "",
+            projectId: Int64(defaults.integer(forKey: keys.projectId)),
             startDate: startDate
         )
     }
 
-    func clearRunningTimer() {
-        UserDefaults.standard.removeObject(forKey: "running_timer_name")
-        UserDefaults.standard.removeObject(forKey: "running_timer_notes")
-        UserDefaults.standard.removeObject(forKey: "running_timer_projectId")
-        UserDefaults.standard.removeObject(forKey: "running_timer_categoryId")
-        UserDefaults.standard.removeObject(forKey: "running_timer_startDate")
+    private static func removeLegacyRunningTimer(from defaults: UserDefaults) {
+        let keys = legacyTimerKeys
+        for key in [keys.name, keys.notes, keys.projectId, keys.categoryId, keys.startDate] {
+            defaults.removeObject(forKey: key)
+        }
     }
-
 }

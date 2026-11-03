@@ -2,18 +2,23 @@ import AppKit
 
 /// Writes recordings to a PDF report in the exports folder.
 enum RecordingsExporter {
+    /// Exports stay in Documents, where people look for them. Only exporting touches the folder.
+    static let exportsDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("TimeTracker/exported", isDirectory: true)
+
     static func writePDF(
         for exportEntries: [TimeEntry],
         from startDate: Date,
         to endDate: Date,
-        projectFilter: String
+        projectFilter: String,
+        in directory: URL = exportsDirectoryURL
     ) throws -> URL {
-        DatabaseManager.ensureStorageDirectories()
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let report = reportText(for: exportEntries, periodTitle: rangeTitle(from: startDate, to: endDate), projectFilter: projectFilter)
         let slug = rangeSlug(from: startDate, to: endDate)
         let fileName = "timetracker-\(slug)-\(dateStamp).pdf"
-        let fileURL = DatabaseManager.exportsDirectoryURL.appendingPathComponent(fileName)
+        let fileURL = directory.appendingPathComponent(fileName)
         let pdfData = try buildPDF(from: report)
         try pdfData.write(to: fileURL, options: .atomic)
         return fileURL
