@@ -15,7 +15,6 @@ struct TimerView: View {
             let workspaceWidth = min(isCompactLayout ? 420 : 760, availableWidth)
 
             ZStack {
-                AppTheme.primary.ignoresSafeArea()
                 ambientGlow
 
                 Group {

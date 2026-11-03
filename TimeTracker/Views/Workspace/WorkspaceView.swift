@@ -10,7 +10,6 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            AppTheme.primary.ignoresSafeArea()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: AppTheme.spacingLG) {

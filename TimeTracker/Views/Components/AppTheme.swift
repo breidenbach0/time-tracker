@@ -13,17 +13,14 @@ struct AppTheme {
 
     /// Solid dark used under translucent layers and wherever an opaque color is required.
     static let canvas = Color(hex: "#111114")
-    /// Root background of each screen. Clear so the window glass shows through.
-    static let primary = Color.clear
-    static let secondary = Color.white.opacity(0.04)
+    /// Primary buttons, selections and other emphasis.
     static let accent = Color(hex: "#F5F5F7")
     /// Text and icons drawn on top of `accent`.
     static let onAccent = Color(hex: "#111114")
-    static let accentBlue = Color(hex: "#E4E4E7")
-    static let accentMint = Color(hex: "#63E6BE")
-    static let accentWarm = Color(hex: "#FF9F0A")
-    static let accentRose = Color(hex: "#FF6482")
+    /// Live recording state: the pulsing dot, the Stop button and the recording glow.
     static let recording = Color(hex: "#FF453A")
+    /// Cautions and highlights that aren't errors, like days in the last export.
+    static let warning = Color(hex: "#FF9F0A")
     static let success = Color(hex: "#30D158")
     static let danger = Color(hex: "#FF453A")
     static let textPrimary = Color(hex: "#F5F5F7")
@@ -40,18 +37,6 @@ struct AppTheme {
         colors: [Color.white.opacity(0.16), Color.white.opacity(0.04)],
         startPoint: .top,
         endPoint: .bottom
-    )
-
-    static let heroGradient = LinearGradient(
-        colors: [Color.white.opacity(0.08), Color.white.opacity(0.02)],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
-    static let cardGradient = LinearGradient(
-        colors: [Color.white.opacity(0.08), Color.white.opacity(0.03)],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
     )
 
     static let colorPalette: [String] = [
@@ -71,14 +56,12 @@ struct AppTheme {
     static let spacingMD: CGFloat = 16
     static let spacingLG: CGFloat = 24
     static let spacingXL: CGFloat = 32
-    static let spacingXXL: CGFloat = 48
 
     // MARK: - Corner Radius
     static let cornerRadiusSmall: CGFloat = 8
     static let cornerRadiusMedium: CGFloat = 12
     static let cornerRadiusLarge: CGFloat = 16
     static let cornerRadiusXL: CGFloat = 26
-    static let cornerRadiusFull: CGFloat = 28
 
     // MARK: - Typography
     static func sectionLabel(_ text: String) -> some View {

@@ -71,7 +71,7 @@ struct UpdateCard: View {
     private func failure(_ release: Release?, _ message: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             note("Couldn’t update TimeTracker", detail: message,
-                 symbol: "exclamationmark.triangle.fill", color: AppTheme.accentWarm, closes: true)
+                 symbol: "exclamationmark.triangle.fill", color: AppTheme.warning, closes: true)
             if let release {
                 HStack(spacing: 10) {
                     Button {

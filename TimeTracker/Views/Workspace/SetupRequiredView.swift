@@ -6,7 +6,6 @@ struct SetupRequiredView: View {
 
     var body: some View {
         ZStack {
-            AppTheme.primary.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: AppTheme.spacingLG) {
                 Spacer()

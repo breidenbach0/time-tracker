@@ -24,16 +24,6 @@ struct TimeEntry: Identifiable, Equatable {
         }
     }
 
-    var isSynced: Bool {
-        syncProvider != nil && syncEventIdentifier != nil
-    }
-
-    // Compatibility shim for older callsites while the UI migrates.
-    var calendarEventIdentifier: String? {
-        get { syncEventIdentifier }
-        set { syncEventIdentifier = newValue }
-    }
-
     var duration: TimeInterval {
         guard let endDate = endDate else {
             return Date().timeIntervalSince(startDate)
@@ -80,5 +70,20 @@ struct TimeEntry: Identifiable, Equatable {
         self.syncProviderRawValue = syncProvider?.rawValue
         self.syncCalendarIdentifier = syncCalendarIdentifier
         self.syncEventIdentifier = syncEventIdentifier
+    }
+}
+
+/// Calendar a recording was synced to by earlier versions; kept so that data survives.
+enum SyncProvider: String, CaseIterable, Codable, Hashable, Identifiable {
+    case apple
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        "Apple Calendar"
+    }
+
+    var badgeTitle: String {
+        "Apple"
     }
 }

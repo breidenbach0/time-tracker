@@ -31,7 +31,6 @@ struct EntriesListView: View {
 
     var body: some View {
         ZStack {
-            AppTheme.primary.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 centeredContent {
@@ -792,7 +791,7 @@ private struct ExportRangePickerSheet: View {
     @State private var isChoosingEnd = false
 
     private let calendar = Calendar.current
-    private let orange = AppTheme.accentWarm
+    private let orange = AppTheme.warning
 
     init(
         lastExportedRange: ClosedRange<Date>?,

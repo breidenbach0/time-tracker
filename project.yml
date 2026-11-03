@@ -11,8 +11,6 @@ settings:
     SWIFT_VERSION: "5.9"
     MARKETING_VERSION: "1.1.0"
     CURRENT_PROJECT_VERSION: "2"
-    INFOPLIST_KEY_NSCalendarsUsageDescription: "TimeTracker needs Calendar access to import your Apple calendars and sync recordings as events."
-    INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "TimeTracker needs Calendar access to import your Apple calendars and sync recordings as events."
 
 packages:
   SQLite:

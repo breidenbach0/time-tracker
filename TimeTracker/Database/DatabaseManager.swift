@@ -561,89 +561,6 @@ final class DatabaseManager {
         }
     }
 
-    // MARK: - Category Operations
-
-    func fetchAllCategories() -> [Category] {
-        var result: [Category] = []
-        do {
-            let query = categories.order(name.asc)
-            for row in try connection().prepare(query) {
-                result.append(Category(
-                    id: row[id],
-                    name: row[name],
-                    colorHex: row[colorHex],
-                    isDefault: row[isDefault],
-                    sourceCalendarIdentifier: row[sourceCalendarIdentifier]
-                ))
-            }
-        } catch {
-            print("Fetch categories error: \(error)")
-        }
-        return result
-    }
-
-    func fetchCategory(withId categoryIdentifier: Int64) -> Category? {
-        do {
-            let query = categories.filter(id == categoryIdentifier)
-            guard let row = try db?.pluck(query) else { return nil }
-
-            return Category(
-                id: row[id],
-                name: row[name],
-                colorHex: row[colorHex],
-                isDefault: row[isDefault],
-                sourceCalendarIdentifier: row[sourceCalendarIdentifier]
-            )
-        } catch {
-            print("Fetch category error: \(error)")
-            return nil
-        }
-    }
-
-    func insertCategory(_ category: Category) -> Int64? {
-        do {
-            let rowId = try db?.run(categories.insert(
-                name <- category.name,
-                colorHex <- category.colorHex,
-                isDefault <- category.isDefault,
-                sourceCalendarIdentifier <- category.sourceCalendarIdentifier
-            ))
-            postWorkspaceChanged()
-            return rowId
-        } catch {
-            print("Insert category error: \(error)")
-            return nil
-        }
-    }
-
-    func updateCategory(_ category: Category) {
-        guard let categoryIdentifier = category.id else { return }
-
-        do {
-            let categoryRow = categories.filter(id == categoryIdentifier)
-            try db?.run(categoryRow.update(
-                name <- category.name,
-                colorHex <- category.colorHex,
-                sourceCalendarIdentifier <- category.sourceCalendarIdentifier
-            ))
-            postWorkspaceChanged()
-        } catch {
-            print("Update category error: \(error)")
-        }
-    }
-
-    func deleteCategory(_ category: Category) {
-        guard let categoryIdentifier = category.id else { return }
-
-        do {
-            let categoryRow = categories.filter(id == categoryIdentifier)
-            try db?.run(categoryRow.delete())
-            postWorkspaceChanged()
-        } catch {
-            print("Delete category error: \(error)")
-        }
-    }
-
     // MARK: - Time Entry Operations
 
     private func timeEntry(from row: Row) -> TimeEntry {
@@ -676,50 +593,6 @@ final class DatabaseManager {
             }
         } catch {
             print("Fetch time entries error: \(error)")
-        }
-        return result
-    }
-
-    func fetchTimeEntries(for date: Date, projectFilterId: Int64? = nil) -> [TimeEntry] {
-        var result: [TimeEntry] = []
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-
-        do {
-            var query = timeEntries
-                .filter(startDate >= startOfDay && startDate < endOfDay)
-                .order(startDate.asc)
-
-            if let projectFilterId {
-                query = query.filter(projectId == projectFilterId)
-            }
-
-            for row in try connection().prepare(query) {
-                result.append(timeEntry(from: row))
-            }
-        } catch {
-            print("Fetch time entries for date error: \(error)")
-        }
-        return result
-    }
-
-    func fetchTimeEntries(from start: Date, to end: Date, projectFilterId: Int64? = nil) -> [TimeEntry] {
-        var result: [TimeEntry] = []
-        do {
-            var query = timeEntries
-                .filter(startDate >= start && startDate < end)
-                .order(startDate.asc)
-
-            if let projectFilterId {
-                query = query.filter(projectId == projectFilterId)
-            }
-
-            for row in try connection().prepare(query) {
-                result.append(timeEntry(from: row))
-            }
-        } catch {
-            print("Fetch time entries range error: \(error)")
         }
         return result
     }
@@ -834,42 +707,6 @@ final class DatabaseManager {
         }
 
         return names
-    }
-
-    // MARK: - Sync Settings
-
-    func syncSetting(forKey key: String) -> String? {
-        do {
-            let query = "SELECT value FROM sync_settings WHERE key = ?"
-            return try db?.scalar(query, key) as? String
-        } catch {
-            print("Sync setting read error: \(error)")
-            return nil
-        }
-    }
-
-    func setSyncSetting(_ value: String?, forKey key: String) {
-        do {
-            if let value {
-                try db?.run("INSERT OR REPLACE INTO sync_settings (key, value) VALUES (?, ?)", key, value)
-            } else {
-                try db?.run("DELETE FROM sync_settings WHERE key = ?", key)
-            }
-        } catch {
-            print("Sync setting write error: \(error)")
-        }
-    }
-
-    func removeSyncSetting(forKey key: String) {
-        setSyncSetting(nil, forKey: key)
-    }
-
-    func appSetting(forKey key: String) -> String? {
-        syncSetting(forKey: key)
-    }
-
-    func setAppSetting(_ value: String?, forKey key: String) {
-        setSyncSetting(value, forKey: key)
     }
 
     // MARK: - Running Timer State
