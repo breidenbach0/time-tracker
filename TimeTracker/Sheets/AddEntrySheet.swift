@@ -4,6 +4,9 @@ struct AddEntrySheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let editingEntry: TimeEntry?
+    /// For a new recording: the day it starts on (today if nil) and its project (the first if nil).
+    let initialDate: Date?
+    let initialProjectId: Int64?
     private let store = WorkspaceStore.shared
 
     @State private var name = ""
@@ -26,8 +29,10 @@ struct AddEntrySheet: View {
         case date
     }
 
-    init(editingEntry: TimeEntry? = nil) {
+    init(editingEntry: TimeEntry? = nil, initialDate: Date? = nil, initialProjectId: Int64? = nil) {
         self.editingEntry = editingEntry
+        self.initialDate = initialDate
+        self.initialProjectId = initialProjectId
     }
 
     var body: some View {
@@ -65,8 +70,9 @@ struct AddEntrySheet: View {
             if let editingEntry {
                 populate(from: editingEntry)
             } else {
-                projectId = projects.first?.id
-                dateInput = dateFormatter.string(from: Date())
+                let preferredProject = projects.first { $0.id == initialProjectId }
+                projectId = preferredProject?.id ?? projects.first?.id
+                dateInput = dateFormatter.string(from: initialDate ?? Date())
                 startMinutes = 9 * 60
                 endMinutes = 10 * 60
             }

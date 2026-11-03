@@ -1,12 +1,13 @@
 import SwiftUI
 
 /// The Recordings tab's month calendar: days tinted by the projects recorded on them, and the
-/// selected day's recordings underneath.
+/// selected day's recordings underneath. Double-clicking a day adds a recording on it.
 struct RecordingsCalendarView: View {
     @ObservedObject var viewModel: EntriesViewModel
     @Binding var calendarMonth: Date
     @Binding var selectedDate: Date
     let onEdit: (TimeEntry) -> Void
+    let onAddEntry: (Date) -> Void
 
     var body: some View {
         ScrollView {
@@ -166,6 +167,9 @@ struct RecordingsCalendarView: View {
             .opacity(isCurrentMonth ? 1 : 0.4)
         }
         .buttonStyle(.plain)
+        // The first click selects the day as before; the second opens a new recording on it.
+        .simultaneousGesture(TapGesture(count: 2).onEnded { onAddEntry(date) })
+        .help("Double-click to add hours on this day")
     }
 
     @ViewBuilder

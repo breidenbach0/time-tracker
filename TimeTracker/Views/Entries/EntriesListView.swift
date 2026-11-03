@@ -20,6 +20,7 @@ struct EntriesListView: View {
     @State private var showingAddSheet = false
     @State private var showingExportRangePicker = false
     @State private var selectedEntry: TimeEntry?
+    @State private var newEntryDay: NewEntryDay?
     @State private var exportErrorMessage: String?
     @State private var calendarMonth = Date()
     @State private var selectedCalendarDate = Date()
@@ -50,7 +51,8 @@ struct EntriesListView: View {
                                 viewModel: viewModel,
                                 calendarMonth: $calendarMonth,
                                 selectedDate: $selectedCalendarDate,
-                                onEdit: { selectedEntry = $0 }
+                                onEdit: { selectedEntry = $0 },
+                                onAddEntry: { newEntryDay = NewEntryDay(date: $0) }
                             )
                         }
                     }
@@ -62,6 +64,9 @@ struct EntriesListView: View {
         }
         .sheet(item: $selectedEntry) { entry in
             AddEntrySheet(editingEntry: entry)
+        }
+        .sheet(item: $newEntryDay) { day in
+            AddEntrySheet(initialDate: day.date, initialProjectId: viewModel.selectedProjectFilterId)
         }
         .sheet(isPresented: $showingExportRangePicker) {
             ExportRangePickerSheet(
@@ -364,4 +369,10 @@ struct EntriesListView: View {
         picker.show(relativeTo: origin, of: contentView, preferredEdge: .minY)
     }
 
+}
+
+/// A day picked in the calendar to add a recording on.
+private struct NewEntryDay: Identifiable {
+    let id = UUID()
+    let date: Date
 }

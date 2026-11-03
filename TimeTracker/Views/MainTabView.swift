@@ -48,6 +48,7 @@ struct MainTabView: View {
                     VStack(spacing: 0) {
                         AppChromeBar(
                             selectedSection: $selectedSection,
+                            updater: updater,
                             isCompact: isCompact,
                             openMiniPlayer: openMiniPlayer
                         )
@@ -96,6 +97,7 @@ struct MainTabView: View {
 
 private struct AppChromeBar: View {
     @Binding var selectedSection: AppSection
+    @ObservedObject var updater: Updater
     let isCompact: Bool
     let openMiniPlayer: () -> Void
 
@@ -108,6 +110,8 @@ private struct AppChromeBar: View {
             }
 
             Spacer()
+
+            UpdateButton(updater: updater, isCompact: isCompact)
 
             if !isCompact {
                 sectionSwitcher

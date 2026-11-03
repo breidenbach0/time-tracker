@@ -16,7 +16,7 @@ Needs macOS 13 Ventura or later, on Apple silicon or Intel. Liquid Glass needs m
 
 ## Update
 
-TimeTracker looks for a new version on GitHub when it starts, and once a day while it's open. When there is one, a card at the bottom of the window offers **Install Update**: TimeTracker downloads it, checks that it's signed with TimeTracker's release key, puts it in place of itself and starts again. A recording that's running keeps going. **TimeTracker › Check for Updates…** (or **Settings › Updates › Check Now**) looks right away; turn off **Check for Updates Automatically** to stop the daily look. Installing needs TimeTracker in a folder you can write to, such as Applications.
+TimeTracker looks for a new version on GitHub when it starts, and once a day while it's open. When there is one, an **Update to …** button appears at the top of the window: click it and TimeTracker downloads it, checks that it's signed with TimeTracker's release key, puts it in place of itself and starts again. A recording that's running keeps going. **TimeTracker › Check for Updates…** (or **Settings › Updates › Check Now**) looks right away; turn off **Check for Updates Automatically** to stop the daily look. Installing needs TimeTracker in a folder you can write to, such as Applications.
 
 Your recordings live in `~/Library/Application Support/TimeTracker` and aren't touched by updates. PDF exports go to `~/Documents/TimeTracker/exported`. (Version 1.0 kept recordings in `~/Documents/TimeTracker/database`; 1.1 copies them over the first time it starts and leaves the old copy where it was.)
 

@@ -1,22 +1,19 @@
 import AppKit
 import SwiftUI
 
-/// News about TimeTracker updates, floating at the bottom of the window: a newer version to
-/// install, how installing it is going, or what went wrong. Nothing when there's no news.
+/// News about TimeTracker updates, floating at the bottom of the window: a check the user asked
+/// for, what went wrong, or that an update worked. A newer version to install, and installing it,
+/// show in the top bar instead (`UpdateButton`). Nothing when there's no news.
 struct UpdateCard: View {
     @ObservedObject var updater: Updater
 
     var body: some View {
         Group {
             switch updater.state {
-            case .idle:
+            case .idle, .available, .installing:
                 EmptyView()
             case .checking:
                 card { progress("Checking for updates…") }
-            case .available(let release):
-                card { available(release) }
-            case .installing(_, let step):
-                card { progress(step, detail: "TimeTracker starts again when it’s done. A running recording keeps going.") }
             case .needsRestart(let version):
                 card {
                     note("TimeTracker \(version) is installed", detail: "Open TimeTracker again to start using it.",
@@ -38,34 +35,6 @@ struct UpdateCard: View {
             }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: updater.state)
-    }
-
-    private func available(_ release: Release) -> some View {
-        let installsHere = updater.canInstall && release.archive != nil
-        return VStack(alignment: .leading, spacing: 12) {
-            note("TimeTracker \(release.version) is available",
-                 detail: updater.currentVersion.map { "You have \($0)." },
-                 symbol: "arrow.down.circle.fill", color: AppTheme.accent, closes: true)
-            HStack(spacing: 10) {
-                Button {
-                    Task { await updater.install(release) }
-                } label: {
-                    actionLabel(installsHere ? "Install Update" : "Download", prominent: true)
-                }
-                .buttonStyle(.glassCapsule(tint: AppTheme.accent.opacity(0.92)))
-
-                Button("What’s New") { updater.openPage(of: release) }
-                    .buttonStyle(.link)
-                    .font(.system(size: 12, weight: .medium))
-            }
-            .glassGroup(spacing: 10)
-            if !updater.canInstall {
-                Text("Move TimeTracker to Applications to install updates from here.")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(AppTheme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
     }
 
     private func failure(_ release: Release?, _ message: String) -> some View {
@@ -154,6 +123,67 @@ struct UpdateCard: View {
             .shadow(color: .black.opacity(0.25), radius: 16, y: 6)
             .padding(AppTheme.spacingMD)
             .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+}
+
+/// Shows in the window's top bar while a newer TimeTracker is out: one click installs it and
+/// restarts. While it installs, it shows how far along it is.
+struct UpdateButton: View {
+    @ObservedObject var updater: Updater
+    var isCompact = false
+
+    var body: some View {
+        Group {
+            switch updater.state {
+            case .available(let release):
+                let installsHere = updater.canInstall && release.archive != nil
+
+                Button {
+                    Task { await updater.install(release) }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                        if !isCompact {
+                            Text(installsHere ? "Update to \(release.version)" : "Download \(release.version)")
+                        }
+                    }
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundColor(AppTheme.onAccent)
+                    .padding(.horizontal, isCompact ? 10 : 14)
+                    .frame(height: 34)
+                }
+                .buttonStyle(.glassCapsule(tint: AppTheme.accent.opacity(0.92)))
+                .help(installsHere
+                      ? "Install TimeTracker \(release.version). It starts again when it’s done, and a running recording keeps going."
+                      : "Download TimeTracker \(release.version) from GitHub. Move TimeTracker to Applications to install updates from here.")
+                .contextMenu {
+                    Button("What’s New") { updater.openPage(of: release) }
+                    Button("Not Now") { updater.dismiss() }
+                }
+                .transition(.scale(scale: 0.85).combined(with: .opacity))
+
+            case .installing(_, let step):
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    if !isCompact {
+                        Text(step)
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundColor(AppTheme.textPrimary)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .frame(height: 34)
+                .glassSurface(in: Capsule(style: .continuous))
+                .help("TimeTracker starts again when it’s done. A running recording keeps going.")
+                .transition(.opacity)
+
+            default:
+                EmptyView()
+            }
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: updater.state)
     }
 }
 
