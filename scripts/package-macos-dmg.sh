@@ -99,7 +99,11 @@ echo "Built dist/TimeTracker.zip"
 # TimeTracker's updater installs nothing without this signature.
 rm -f "$DIST_DIR/TimeTracker.zip.sig"
 if [[ "${UNSIGNED:-0}" != 1 ]]; then
-  swiftc -O -suppress-warnings scripts/sign-update.swift -o build/sign-update
+  # Keychain's "Always Allow" trusts this exact build of the tool, so it's only rebuilt when its
+  # source changes; a new build asks once more.
+  if [[ ! -x build/sign-update || scripts/sign-update.swift -nt build/sign-update ]]; then
+    swiftc -O -suppress-warnings scripts/sign-update.swift -o build/sign-update
+  fi
   build/sign-update "$DIST_DIR/TimeTracker.zip" > "$DIST_DIR/TimeTracker.zip.sig.tmp"
   mv "$DIST_DIR/TimeTracker.zip.sig.tmp" "$DIST_DIR/TimeTracker.zip.sig"
   echo "Signed dist/TimeTracker.zip"

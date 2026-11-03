@@ -41,10 +41,10 @@ The site at [breidenbach0.github.io/time-tracker](https://breidenbach0.github.io
 ## Releasing
 
 1. Bump `MARKETING_VERSION` (and `CURRENT_PROJECT_VERSION`) in `project.yml`. The updater only installs a release whose app has exactly the version its tag says.
-2. Run `scripts/package-macos-dmg.sh`. It generates the Xcode project, then builds `dist/TimeTracker.dmg`, the download, and `dist/TimeTracker.zip`, which the in-app updater installs, and signs the zip into `dist/TimeTracker.zip.sig`. macOS asks you to allow the use of the signing key.
+2. Run `scripts/package-macos-dmg.sh`. It generates the Xcode project, then builds `dist/TimeTracker.dmg`, the download, and `dist/TimeTracker.zip`, which the in-app updater installs, and signs the zip into `dist/TimeTracker.zip.sig`. The first time, macOS asks you to allow the use of the signing key: click **Always Allow** and later releases sign without asking.
 3. Commit, push to `main`, and attach all three files to a release tagged `vX.Y.Z` and marked latest:
    ```bash
    gh release create vX.Y.Z dist/TimeTracker.dmg dist/TimeTracker.zip dist/TimeTracker.zip.sig --target main --latest
    ```
 
-Updates are signed with an Ed25519 key kept in the maintainer's login Keychain (item "TimeTracker update signing key"); macOS asks before each use. `scripts/sign-update.swift --create-key` made it once and printed its public half, which is `UpdateSource.releaseKey` in `TimeTracker/Services/Updater.swift`. The updater refuses any update not signed with it, so someone who only gets into the GitHub account can't push one. Never replace the key: released copies only accept this one. `UNSIGNED=1 scripts/package-macos-dmg.sh` builds without signing, for builds that won't be released.
+Updates are signed with an Ed25519 key kept in the maintainer's login Keychain (item "TimeTracker update signing key"); macOS asks before a tool may use it. `scripts/sign-update.swift --create-key` made it once and printed its public half, which is `UpdateSource.releaseKey` in `TimeTracker/Services/Updater.swift`. The updater refuses any update not signed with it, so someone who only gets into the GitHub account can't push one. Never replace the key: released copies only accept this one. `UNSIGNED=1 scripts/package-macos-dmg.sh` builds without signing, for builds that won't be released.

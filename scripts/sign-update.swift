@@ -1,6 +1,7 @@
 // Signs TimeTracker updates with the release key kept in your login Keychain, so TimeTracker's
 // updater can tell an update really comes from you, and not just from whoever controls the
-// GitHub release. The key never leaves the Keychain, and macOS asks you each time it's used.
+// GitHub release. The key never leaves the Keychain. macOS asks before this tool may use it; click
+// Always Allow once and later releases sign without asking, until the tool is rebuilt.
 //
 // Usage (scripts/package-macos-dmg.sh does the signing):
 //   swiftc -O scripts/sign-update.swift -o build/sign-update
