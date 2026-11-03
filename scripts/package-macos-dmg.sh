@@ -77,6 +77,16 @@ else
   ln -s /Applications "$STAGE/TimeTracker/Applications"
   hdiutil create -volname "TimeTracker" -srcfolder "$STAGE/TimeTracker" -format UDZO -quiet "$DIST_DIR/TimeTracker.dmg"
 fi
+
+# Check the copy people will install, since the image tools copy files their own way.
+MOUNT="$(mktemp -d)"
+hdiutil attach -nobrowse -readonly -mountpoint "$MOUNT" "$DIST_DIR/TimeTracker.dmg" -quiet
+if ! codesign --verify --strict "$MOUNT/TimeTracker.app"; then
+  hdiutil detach "$MOUNT" -quiet
+  echo "The app inside dist/TimeTracker.dmg fails its signature check." >&2
+  exit 1
+fi
+hdiutil detach "$MOUNT" -quiet
 echo "Built dist/TimeTracker.dmg"
 
 rm -f "$DIST_DIR/TimeTracker.zip"

@@ -10,7 +10,8 @@ app_name = os.path.basename(app)
 format = "UDZO"
 files = [app]
 symlinks = {"Applications": "/Applications"}
-hide_extensions = [app_name]
+# No hide_extensions: it writes Finder info onto the bundle, which breaks its signature check, and
+# Finder hides ".app" anyway.
 
 icon = os.path.join(app, "Contents", "Resources", "AppIcon.icns")
 if not os.path.exists(icon):
