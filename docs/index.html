@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TimeTracker — Time tracking for your Mac</title>
+  <meta name="description" content="TimeTracker is a Liquid Glass time tracker for macOS. Start a timer for a project or add hours by hand, see your week as a list or a calendar, and export it as a PDF. Free and open source.">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#07070b" media="(prefers-color-scheme: dark)">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="TimeTracker — Time tracking for your Mac">
+  <meta property="og:description" content="A Liquid Glass time tracker for macOS: a one-click timer, a floating mini player, a list and a calendar of your hours, and PDF exports. Free and open source.">
+  <meta property="og:url" content="https://breidenbach0.github.io/time-tracker/">
+  <meta property="og:image" content="https://breidenbach0.github.io/time-tracker/images/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="apple-touch-icon" href="images/app-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="site.js" defer></script>
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+  <header class="nav-wrap">
+    <nav class="nav glass" aria-label="Main">
+      <a class="brand" href="#top">
+        <img src="images/app-icon.png" alt="" width="28" height="28">
+        <span>TimeTracker</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#install">Install</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/breidenbach0/time-tracker">GitHub</a>
+      </div>
+      <a class="button button-primary button-small" href="https://github.com/breidenbach0/time-tracker/releases/latest/download/TimeTracker.dmg">Download</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <img class="hero-icon" src="images/app-icon.png" alt="" width="144" height="144">
+      <h1>Your hours,<br><span class="gradient-text">on glass.</span></h1>
+      <p class="lead">TimeTracker is a time tracker for your Mac. Start a timer for a project, or add hours by hand, then see your week as a list or a calendar and export it as a PDF.</p>
+      <div class="cta">
+        <a class="button button-primary" href="https://github.com/breidenbach0/time-tracker/releases/latest/download/TimeTracker.dmg">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 20h14" /></svg>
+          Download for Mac
+        </a>
+        <a class="button button-glass" href="https://github.com/breidenbach0/time-tracker">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18-6-6 6-6m6 0 6 6-6 6" /></svg>
+          View on GitHub
+        </a>
+      </div>
+      <p class="fineprint">Free and open source · <span data-version>Version 1.1.0</span> · macOS 13 or later · Apple silicon and Intel</p>
+
+      <figure class="hero-shot">
+        <img src="images/record.png" width="1400" height="1156" alt="The TimeTracker window recording: a recording called Ada Lovelace in the Northwind App project with notes, the status Recording since 09:26, a clock at 1 hour 22 minutes, and a red Stop button next to Manual, all on dark glass.">
+      </figure>
+    </section>
+
+    <section id="features" class="section">
+      <p class="eyebrow">Features</p>
+      <h2>Everything you need. Nothing you don't.</h2>
+      <div class="features">
+        <article class="feature glass reveal">
+          <div class="feature-icon tile-red"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5" /><path d="M12 9.5v4l2.5 2M9.5 3h5" /></svg></div>
+          <h3>One click to start</h3>
+          <p>Pick a project and press Start. A running recording keeps going if you quit, restart or update, and picks up where it was.</p>
+        </article>
+        <article class="feature glass reveal">
+          <div class="feature-icon tile-purple"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="9" width="19" height="6.5" rx="3.25" /><circle cx="17.5" cy="12.25" r="1.2" /><path d="M6 12.25h5" /></svg></div>
+          <h3>A mini player</h3>
+          <p>Shrink TimeTracker to a slim glass bar that floats above your other windows, with the clock, the project and Stop always in reach.</p>
+        </article>
+        <article class="feature glass reveal">
+          <div class="feature-icon tile-orange"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5" /><circle cx="12" cy="3.5" r="1.4" /><circle cx="20.5" cy="12" r="1.4" /></svg></div>
+          <h3>Hours by hand</h3>
+          <p>Forgot the timer? Pick the day and drag the start and end around a 24-hour dial, in five-minute steps.</p>
+        </article>
+        <article class="feature glass reveal">
+          <div class="feature-icon tile-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3" /><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4" /></svg></div>
+          <h3>A list or a calendar</h3>
+          <p>Every recording grouped by day with daily totals, or a month calendar tinted in your projects' colours. Filter by project in both.</p>
+        </article>
+        <article class="feature glass reveal">
+          <div class="feature-icon tile-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7z" /><path d="M14 3.5v4h4M9.5 13h5M9.5 16.5h5" /></svg></div>
+          <h3>PDF reports</h3>
+          <p>Pick the days, and TimeTracker writes a clean PDF with every recording, its notes and its hours, ready to share. Days in your last export are marked.</p>
+        </article>
+        <article class="feature glass reveal">
+          <div class="feature-icon tile-graphite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6z" /><path d="m9 12 2 2 4-4" /></svg></div>
+          <h3>Yours, and up to date</h3>
+          <p>No account and no cloud: your recordings stay on your Mac. Updates arrive signed by the developer and install in place.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section showcase">
+      <div class="showcase-row reveal">
+        <div class="showcase-text">
+          <p class="eyebrow">Review</p>
+          <h2>Your days, at a glance.</h2>
+          <p>Recordings are grouped by day, newest first, with each day's total and the hours across all of them. A colour bar shows the project; click a recording to change it.</p>
+        </div>
+        <div class="showcase-shot">
+          <img src="images/recordings.png" width="1400" height="1156" loading="lazy" alt="The Recordings list: project filters at the top, then recordings grouped by day with a total for each day, each with its project colour and duration.">
+        </div>
+      </div>
+      <div class="showcase-row showcase-row-flip reveal">
+        <div class="showcase-text">
+          <p class="eyebrow">Plan</p>
+          <h2>Your month, in colour.</h2>
+          <p>Switch to the calendar to see where the hours went. Days take on the colours of the projects you worked on; pick one to see its recordings underneath.</p>
+        </div>
+        <div class="showcase-shot">
+          <img src="images/calendar.png" width="1400" height="1156" loading="lazy" alt="The calendar view for October 2026: weekdays tinted in blue, pink and green for the projects recorded that day, with recording names and daily totals in each cell.">
+        </div>
+      </div>
+      <div class="showcase-row reveal">
+        <div class="showcase-text">
+          <p class="eyebrow">Catch up</p>
+          <h2>Add the hours you missed.</h2>
+          <p>Name the recording, or leave it and TimeTracker picks a name. Choose the project and the day, then drag the two handles around the dial to when you started and stopped.</p>
+        </div>
+        <div class="showcase-shot">
+          <img src="images/manual.png" width="1400" height="1356" loading="lazy" alt="The New Recording sheet: a suggested name, project choices, the date, and a 24-hour dial with a pink arc from 9:00 to 10:00.">
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <p class="eyebrow">Mini player</p>
+      <h2>Always in reach.</h2>
+      <p class="section-lead">Click the mini player button and the window shrinks to a glass bar that stays above everything else, on every Space.</p>
+      <div class="mini-card glass">
+        <img src="images/mini-player.png" width="1360" height="148" loading="lazy" alt="The mini player: a glass bar with a red recording dot, the recording's name, the Northwind App project, a clock at 1:24:48 and a red Stop button.">
+      </div>
+    </section>
+
+    <section class="section">
+      <p class="eyebrow">How it works</p>
+      <h2>Three steps. That's it.</h2>
+      <ol class="steps">
+        <li class="step glass reveal">
+          <span class="step-number">1</span>
+          <h3>Make a project</h3>
+          <p>Give it a name and a colour, and if you like, a few words on what it covers.</p>
+        </li>
+        <li class="step glass reveal">
+          <span class="step-number">2</span>
+          <h3>Press Start</h3>
+          <p>The clock runs until you press Stop. Add notes while you work, or switch projects.</p>
+        </li>
+        <li class="step glass reveal">
+          <span class="step-number">3</span>
+          <h3>Review and export</h3>
+          <p>See your recordings as a list or a calendar, fix any of them, and export the days you need as a PDF.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section id="install" class="section">
+      <p class="eyebrow">Install</p>
+      <h2>Up and running in a minute.</h2>
+      <div class="install glass reveal">
+        <ol class="install-steps">
+          <li>
+            <h3>Download TimeTracker</h3>
+            <p><a class="button button-primary button-small" href="https://github.com/breidenbach0/time-tracker/releases/latest/download/TimeTracker.dmg">Download TimeTracker.dmg</a> <span class="muted" data-size></span></p>
+          </li>
+          <li>
+            <h3>Drag it to Applications</h3>
+            <p>Open the disk image and drag <b>TimeTracker</b> onto the <b>Applications</b> folder next to it.</p>
+          </li>
+          <li>
+            <h3>Open it the first time</h3>
+            <p>TimeTracker isn't notarized by Apple, so macOS asks before it opens it. If you see a message that macOS couldn't verify TimeTracker, click <b>Done</b>, open <b>System Settings › Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b>. You only do this once.</p>
+          </li>
+          <li>
+            <h3>Make your first project</h3>
+            <p>Click <b>Create Project</b>, then press <b>Start</b>.</p>
+          </li>
+        </ol>
+      </div>
+      <p class="note">Needs macOS 13 Ventura or later, on Apple silicon or Intel. Liquid Glass needs macOS 26 or later; earlier versions get a frosted blur instead.</p>
+    </section>
+
+    <section id="faq" class="section">
+      <p class="eyebrow">FAQ</p>
+      <h2>Questions, answered.</h2>
+      <div class="faq">
+        <details class="glass">
+          <summary>Where are my recordings kept?</summary>
+          <p>On your Mac only, in a database in <code>~/Library/Application Support/TimeTracker</code>. PDF exports go to <code>~/Documents/TimeTracker/exported</code>. TimeTracker has no account and sends your recordings nowhere.</p>
+        </details>
+        <details class="glass">
+          <summary>How do I update TimeTracker?</summary>
+          <p>TimeTracker looks for a new version when it starts, and once a day while it's open. When there is one, click <b>Install Update</b> on the card at the bottom of the window: it checks the update is signed by TimeTracker's developer, swaps itself for the new version and starts again. A recording that's running keeps going. <b>TimeTracker › Check for Updates…</b> looks right away.</p>
+        </details>
+        <details class="glass">
+          <summary>I have version 1.0. How do I get the new one?</summary>
+          <p>Version 1.0 can't update itself yet, so download TimeTracker once more and put it in Applications in place of the old one. The new version copies your recordings over the first time it starts, and updates itself from then on.</p>
+        </details>
+        <details class="glass">
+          <summary>Does TimeTracker need the internet?</summary>
+          <p>Only to look for updates on GitHub. Turn that off with <b>TimeTracker › Check for Updates Automatically</b> or in <b>Settings › Updates</b>, and TimeTracker never goes online.</p>
+        </details>
+        <details class="glass">
+          <summary>Can I keep TimeTracker on top while I work?</summary>
+          <p>Yes: the mini player button in the top-left corner shrinks the window to a glass bar that floats above other windows and follows you across Spaces. The arrows on its right bring the full window back.</p>
+        </details>
+        <details class="glass">
+          <summary>How do I remove TimeTracker?</summary>
+          <p>Drag TimeTracker from Applications to the Trash. To remove your recordings too, delete <code>~/Library/Application Support/TimeTracker</code>.</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <img src="images/app-icon.png" alt="" width="40" height="40">
+    <p>TimeTracker is free and open source under the <a href="https://github.com/breidenbach0/time-tracker/blob/main/LICENSE">Apache License 2.0</a>. Made by Simon Breidenbach.</p>
+    <p class="muted">Not affiliated with Apple. Apple, Mac and macOS are trademarks of Apple Inc.</p>
+  </footer>
+</body>
+</html>

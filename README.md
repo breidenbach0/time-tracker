@@ -2,7 +2,9 @@
 
 A Liquid Glass time tracker for macOS: start a timer for a project, or add a recording by hand, then review your recordings as a list or a calendar and export them as a PDF.
 
-**[Download TimeTracker.dmg](https://github.com/breidenbach0/time-tracker/releases/latest/download/TimeTracker.dmg)** from the [latest release](https://github.com/breidenbach0/time-tracker/releases/latest).
+**[Download TimeTracker.dmg](https://github.com/breidenbach0/time-tracker/releases/latest/download/TimeTracker.dmg)** · [Website](https://breidenbach0.github.io/time-tracker/)
+
+<img src="docs/images/record.png" width="700" alt="The TimeTracker window recording an hour and twenty-two minutes for the Northwind App project, with a red Stop button, on dark glass.">
 
 ## Install
 
@@ -31,6 +33,10 @@ open TimeTracker.xcodeproj
 ```
 
 `xcodebuild -project TimeTracker.xcodeproj -scheme TimeTracker -destination platform=macOS test` runs the tests, including updating TimeTracker from a stand-in release.
+
+## Website
+
+The site at [breidenbach0.github.io/time-tracker](https://breidenbach0.github.io/time-tracker/) is GitHub Pages from `docs/` on `main`. Its download buttons point at `releases/latest/download/TimeTracker.dmg`, so they always give the newest release. Screenshots in `docs/images` show made-up demo projects, not anyone's real recordings.
 
 ## Releasing
 
