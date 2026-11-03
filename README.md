@@ -16,15 +16,17 @@ Needs macOS 13 Ventura or later, on Apple silicon or Intel. Liquid Glass needs m
 
 TimeTracker looks for a new version on GitHub when it starts, and once a day while it's open. When there is one, a card at the bottom of the window offers **Install Update**: TimeTracker downloads it, checks that it's signed with TimeTracker's release key, puts it in place of itself and starts again. A recording that's running keeps going. **TimeTracker › Check for Updates…** (or **Settings › Updates › Check Now**) looks right away; turn off **Check for Updates Automatically** to stop the daily look. Installing needs TimeTracker in a folder you can write to, such as Applications.
 
-Your recordings live in `~/Documents/TimeTracker` and aren't touched by updates.
+Your recordings live in `~/Library/Application Support/TimeTracker` and aren't touched by updates. PDF exports go to `~/Documents/TimeTracker/exported`. (Version 1.0 kept recordings in `~/Documents/TimeTracker/database`; 1.1 copies them over the first time it starts and leaves the old copy where it was.)
 
 ## Build from source
 
-You need Xcode 15 or later. The Xcode project is generated from `project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`xcodegen generate`) after adding or removing files.
+You need Xcode 15 or later and [XcodeGen](https://github.com/yonaskolb/XcodeGen). `project.yml` is the only definition of the Xcode project; `TimeTracker.xcodeproj` is generated from it and isn't committed, so run `xcodegen generate` again after pulling or after adding or removing files.
 
 ```bash
+brew install xcodegen
 git clone https://github.com/breidenbach0/time-tracker.git
 cd time-tracker
+xcodegen generate
 open TimeTracker.xcodeproj
 ```
 
@@ -32,8 +34,8 @@ open TimeTracker.xcodeproj
 
 ## Releasing
 
-1. Bump `MARKETING_VERSION` (and `CURRENT_PROJECT_VERSION`) in `project.yml`, then run `xcodegen generate`. The updater only installs a release whose app has exactly the version its tag says.
-2. Run `scripts/package-macos-dmg.sh`. It builds `dist/TimeTracker.dmg`, the download, and `dist/TimeTracker.zip`, which the in-app updater installs, and signs the zip into `dist/TimeTracker.zip.sig`. macOS asks you to allow the use of the signing key.
+1. Bump `MARKETING_VERSION` (and `CURRENT_PROJECT_VERSION`) in `project.yml`. The updater only installs a release whose app has exactly the version its tag says.
+2. Run `scripts/package-macos-dmg.sh`. It generates the Xcode project, then builds `dist/TimeTracker.dmg`, the download, and `dist/TimeTracker.zip`, which the in-app updater installs, and signs the zip into `dist/TimeTracker.zip.sig`. macOS asks you to allow the use of the signing key.
 3. Commit, push to `main`, and attach all three files to a release tagged `vX.Y.Z` and marked latest:
    ```bash
    gh release create vX.Y.Z dist/TimeTracker.dmg dist/TimeTracker.zip dist/TimeTracker.zip.sig --target main --latest

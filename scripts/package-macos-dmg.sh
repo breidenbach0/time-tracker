@@ -21,6 +21,13 @@ if [[ -z "${DEVELOPER_DIR:-}" && -d "/Applications/Xcode.app/Contents/Developer"
   export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
 fi
 
+# The Xcode project is generated from project.yml, so it always matches what's committed.
+if ! command -v xcodegen >/dev/null; then
+  echo "XcodeGen is needed to generate the Xcode project: brew install xcodegen"
+  exit 1
+fi
+xcodegen generate --quiet --spec "$ROOT_DIR/project.yml" --project "$ROOT_DIR"
+
 rm -rf "$DERIVED_DATA_PATH"
 mkdir -p "$ROOT_DIR/build" "$DIST_DIR"
 

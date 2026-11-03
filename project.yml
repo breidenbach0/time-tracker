@@ -1,3 +1,5 @@
+# The one definition of the Xcode project. TimeTracker.xcodeproj is generated from this file
+# (`xcodegen generate`) and isn't committed.
 name: TimeTracker
 options:
   bundleIdPrefix: com.simonbreidenbach.timetracker
@@ -15,7 +17,8 @@ settings:
 packages:
   SQLite:
     url: https://github.com/stephencelis/SQLite.swift
-    from: "0.14.1"
+    # Exact, because no Package.resolved is committed with the generated project.
+    exactVersion: "0.16.0"
 
 schemes:
   TimeTracker:
