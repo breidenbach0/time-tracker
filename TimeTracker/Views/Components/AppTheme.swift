@@ -66,7 +66,7 @@ struct AppTheme {
     // MARK: - Typography
     static func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .font(.system(size: 11, weight: .semibold))
             .tracking(0.8)
             .textCase(.uppercase)
             .foregroundColor(textSecondary)

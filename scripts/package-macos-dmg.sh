@@ -57,10 +57,26 @@ mkdir -p "$STAGE/TimeTracker"
 ditto --norsrc --noextattr --noqtn --noacl "$APP_PATH" "$STAGE/TimeTracker/TimeTracker.app"
 chmod -R go-w "$STAGE/TimeTracker/TimeTracker.app"
 codesign --verify --strict "$STAGE/TimeTracker/TimeTracker.app"
-ln -s /Applications "$STAGE/TimeTracker/Applications"
+
+# The disk image opens as a styled window (scripts/dmg/settings.py): dmgbuild writes Finder's
+# layout without scripting Finder, so building it asks for no permissions. It lives in a local
+# virtualenv; without it the image is a plain window.
+DMGBUILD="$ROOT_DIR/build/dmg-venv/bin/dmgbuild"
+if [[ ! -x "$DMGBUILD" ]]; then
+  python3 -m venv "$ROOT_DIR/build/dmg-venv" && \
+    "$ROOT_DIR/build/dmg-venv/bin/pip" install --quiet --disable-pip-version-check "dmgbuild==1.6.5" || true
+fi
 
 rm -f "$DIST_DIR/TimeTracker.dmg"
-hdiutil create -volname "TimeTracker" -srcfolder "$STAGE/TimeTracker" -format UDZO -quiet "$DIST_DIR/TimeTracker.dmg"
+if [[ -x "$DMGBUILD" ]]; then
+  "$DMGBUILD" -s scripts/dmg/settings.py -D app="$STAGE/TimeTracker/TimeTracker.app" \
+    -D background="$ROOT_DIR/scripts/dmg/background.tiff" \
+    "TimeTracker" "$DIST_DIR/TimeTracker.dmg" >"$ROOT_DIR/build/dmgbuild.log" 2>&1
+else
+  echo "dmgbuild isn't available, so the disk image gets a plain window."
+  ln -s /Applications "$STAGE/TimeTracker/Applications"
+  hdiutil create -volname "TimeTracker" -srcfolder "$STAGE/TimeTracker" -format UDZO -quiet "$DIST_DIR/TimeTracker.dmg"
+fi
 echo "Built dist/TimeTracker.dmg"
 
 rm -f "$DIST_DIR/TimeTracker.zip"

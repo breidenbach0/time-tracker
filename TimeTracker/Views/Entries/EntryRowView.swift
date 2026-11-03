@@ -17,7 +17,7 @@ struct EntryRowView: View {
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(entry.name)
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(AppTheme.textPrimary)
                             .lineLimit(1)
                             .truncationMode(.tail)
@@ -29,7 +29,7 @@ struct EntryRowView: View {
                     Spacer(minLength: AppTheme.spacingXS)
 
                     Text(entry.formattedDuration)
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(size: 15, weight: .medium))
                         .monospacedDigit()
                         .foregroundColor(AppTheme.textPrimary)
                         .lineLimit(1)
@@ -77,7 +77,7 @@ struct EntryRowView: View {
                     .help(entry.notes)
             }
         }
-        .font(.system(size: 12, weight: .medium, design: .rounded))
+        .font(.system(size: 12, weight: .medium))
         .foregroundColor(AppTheme.textSecondary)
     }
 }

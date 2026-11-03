@@ -9,6 +9,8 @@ struct MiniPlayerView: View {
     var body: some View {
         HStack(spacing: 10) {
             HStack(spacing: 10) {
+                dragHandle
+
                 PulsingDot(isActive: viewModel.isRunning, size: 7)
 
                 recordingField
@@ -17,7 +19,7 @@ struct MiniPlayerView: View {
 
                 TimelineView(.periodic(from: viewModel.startDate, by: 1)) { context in
                     Text(viewModel.formattedElapsedTime(at: context.date))
-                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                        .font(.system(size: 18, weight: .medium))
                         .foregroundColor(viewModel.isRunning ? AppTheme.textPrimary : AppTheme.textSecondary)
                         .monospacedDigit()
                         .numericTextTransition()
@@ -50,9 +52,11 @@ struct MiniPlayerView: View {
                 .hoverHighlight(cornerRadius: 15)
                 .help("Open full window")
             }
-            .padding(.leading, 18)
+            .padding(.leading, 10)
             .padding(.trailing, 10)
             .frame(width: 650, height: 48)
+            // Anywhere on the bar that isn't a control moves the window.
+            .background(WindowDragArea())
             .background(
                 // The window is borderless and clear, so blur the desktop ourselves under the glass.
                 WindowGlassBackground(material: .hudWindow)
@@ -73,6 +77,17 @@ struct MiniPlayerView: View {
         }
     }
 
+    /// A grip that shows the bar can be moved.
+    private var dragHandle: some View {
+        Image(systemName: "line.3.horizontal")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundColor(AppTheme.textTertiary)
+            .rotationEffect(.degrees(90))
+            .frame(width: 14, height: 30)
+            .overlay(WindowDragArea())
+            .help("Drag to move")
+    }
+
     private var recordingField: some View {
         TextField(
             "",
@@ -80,7 +95,7 @@ struct MiniPlayerView: View {
             prompt: Text(viewModel.recordingPreviewName).foregroundColor(AppTheme.textTertiary)
         )
         .textFieldStyle(.plain)
-        .font(.system(size: 13, weight: .semibold, design: .rounded))
+        .font(.system(size: 13, weight: .semibold))
         .foregroundColor(AppTheme.textPrimary)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -96,7 +111,7 @@ struct MiniPlayerView: View {
                     .shadow(color: projectTint.opacity(0.8), radius: 3)
 
                 Text(viewModel.selectedProject?.name ?? "No Project")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(AppTheme.textPrimary)
                     .lineLimit(1)
                     .frame(maxWidth: 140, alignment: .leading)
@@ -138,9 +153,7 @@ struct MiniPlayerView: View {
         NSApp.activate(ignoringOtherApps: true)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            NSApp.windows
-                .filter { $0.identifier?.rawValue == "TimeTrackerMiniPlayer" }
-                .forEach { $0.close() }
+            MiniPlayerWindow.close()
         }
     }
 }
@@ -162,7 +175,7 @@ private struct MiniPlayerProjectPicker: View {
                             .frame(width: 8, height: 8)
 
                         Text(project.name)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(AppTheme.textPrimary)
                             .lineLimit(1)
 

@@ -83,6 +83,34 @@ extension View {
     }
 }
 
+/// The mini player's window while it's open. Kept as a reference because SwiftUI replaces the
+/// window identifiers it hands out, so looking the window up by identifier misses it.
+enum MiniPlayerWindow {
+    static weak var current: NSWindow?
+
+    static func close() {
+        current?.close()
+        current = nil
+    }
+}
+
+/// Moves the window when dragged: the mini player is borderless, so it has no title bar to hold.
+struct WindowDragArea: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        DragView()
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    private final class DragView: NSView {
+        override var mouseDownCanMoveWindow: Bool { true }
+
+        override func mouseDown(with event: NSEvent) {
+            window?.performDrag(with: event)
+        }
+    }
+}
+
 struct MiniPlayerWindowConfigurator: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         WindowAttachmentView { window in
@@ -95,7 +123,7 @@ struct MiniPlayerWindowConfigurator: NSViewRepresentable {
     private func configure(window: NSWindow) {
         let playerSize = NSSize(width: 680, height: 74)
 
-        window.identifier = NSUserInterfaceItemIdentifier("TimeTrackerMiniPlayer")
+        MiniPlayerWindow.current = window
         window.styleMask = [.borderless]
         window.isMovableByWindowBackground = true
         window.toolbar = nil

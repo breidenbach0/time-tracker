@@ -66,6 +66,8 @@ struct MainTabView: View {
         .overlay(alignment: .bottomTrailing) {
             UpdateCard(updater: updater)
         }
+        // The full window replaces the mini player, however it was opened.
+        .onAppear(perform: MiniPlayerWindow.close)
         .alert("You’re Up to Date", isPresented: $updater.isShowingUpToDate) {
             Button("OK", role: .cancel) {}
         } message: {

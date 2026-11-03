@@ -14,7 +14,7 @@ struct SettingsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppTheme.spacingLG) {
                     Text("Settings")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .bold))
                         .foregroundColor(AppTheme.textPrimary)
 
                     formattingSection
@@ -143,7 +143,7 @@ struct SettingsView: View {
             HStack(spacing: AppTheme.spacingMD) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("TimeTracker \(updater.currentVersion?.description ?? "")")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(AppTheme.textPrimary)
 
                     Text("Signed updates from GitHub, installed in place.")
@@ -157,7 +157,7 @@ struct SettingsView: View {
                     Task { await updater.check(userInitiated: true) }
                 } label: {
                     Text("Check Now")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(AppTheme.textPrimary)
                         .padding(.horizontal, AppTheme.spacingMD)
                         .frame(height: 32)
@@ -193,19 +193,10 @@ struct SettingsView: View {
                     .frame(width: 28, height: 28)
                     .background(tint.opacity(0.14), in: Circle())
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(project.name)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundColor(AppTheme.textPrimary)
-                        .lineLimit(1)
-
-                    if !project.scope.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text(project.scope)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(AppTheme.textSecondary)
-                            .lineLimit(1)
-                    }
-                }
+                Text(project.name)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(AppTheme.textPrimary)
+                    .lineLimit(1)
 
                 Spacer(minLength: 44)
             }
@@ -256,7 +247,7 @@ private struct GlassSegmentedControl<Option: Hashable>: View {
                     }
                 } label: {
                     Text(option[keyPath: title])
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(isSelected ? AppTheme.onAccent : AppTheme.textSecondary)
                         .padding(.horizontal, 14)
                         .frame(height: 28)

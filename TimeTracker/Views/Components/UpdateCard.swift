@@ -60,7 +60,7 @@ struct UpdateCard: View {
 
     private func actionLabel(_ title: String, prominent: Bool) -> some View {
         Text(title)
-            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            .font(.system(size: 12, weight: .semibold))
             .foregroundColor(prominent ? AppTheme.onAccent : AppTheme.textPrimary)
             .padding(.horizontal, 14)
             .frame(height: 28)
@@ -73,7 +73,7 @@ struct UpdateCard: View {
                 .foregroundColor(color)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(AppTheme.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                 if let detail {
@@ -103,7 +103,7 @@ struct UpdateCard: View {
                 .controlSize(.small)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundColor(AppTheme.textPrimary)
                 if let detail {
                     Text(detail)
@@ -148,7 +148,7 @@ struct UpdateButton: View {
                             Text(installsHere ? "Update to \(release.version)" : "Download \(release.version)")
                         }
                     }
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(AppTheme.onAccent)
                     .padding(.horizontal, isCompact ? 10 : 14)
                     .frame(height: 34)
@@ -169,7 +169,7 @@ struct UpdateButton: View {
                         .controlSize(.small)
                     if !isCompact {
                         Text(step)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(AppTheme.textPrimary)
                     }
                 }

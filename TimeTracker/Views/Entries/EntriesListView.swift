@@ -79,7 +79,7 @@ struct EntriesListView: View {
                     showingExportRangePicker = false
                 }
             )
-            .frame(minWidth: 430, minHeight: 560)
+            .frame(minWidth: 460, minHeight: 700)
         }
         .alert("Export", isPresented: Binding(
             get: { exportErrorMessage != nil },
@@ -96,12 +96,12 @@ struct EntriesListView: View {
             VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
                 HStack(alignment: .firstTextBaseline, spacing: AppTheme.spacingSM) {
                     Text("Recordings")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .bold))
                         .foregroundColor(AppTheme.textPrimary)
 
                     if !viewModel.entries.isEmpty {
                         Text(recordingsSummary)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .font(.system(size: 13, weight: .medium))
                             .monospacedDigit()
                             .foregroundColor(AppTheme.textSecondary)
                     }
@@ -214,7 +214,7 @@ struct EntriesListView: View {
 
             VStack(spacing: AppTheme.spacingXS) {
                 Text("No recordings yet")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(AppTheme.textPrimary)
 
                 Text("Start the timer or add a recording by hand.")
@@ -224,7 +224,7 @@ struct EntriesListView: View {
 
             Button(action: { showingAddSheet = true }) {
                 Label("Create Recording", systemImage: "plus")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(AppTheme.onAccent)
                     .padding(.horizontal, AppTheme.spacingLG)
                     .frame(height: 40)
@@ -276,13 +276,13 @@ struct EntriesListView: View {
     private func dayHeader(for section: EntryDaySection) -> some View {
         HStack(alignment: .firstTextBaseline) {
             Text(formatSectionDate(section.day))
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(AppTheme.textPrimary)
 
             Spacer()
 
             Text(DisplayFormatter.compactDuration(section.totalDuration))
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .font(.system(size: 12, weight: .medium))
                 .monospacedDigit()
                 .foregroundColor(AppTheme.textSecondary)
         }

@@ -34,7 +34,7 @@ struct RecordingsCalendarView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(calendarMonthTitle)
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(size: 22, weight: .bold))
                     .foregroundColor(AppTheme.textPrimary)
 
                 Text("\(monthEntryCount) recordings this month")
@@ -51,7 +51,7 @@ struct RecordingsCalendarView: View {
                 }
             }) {
                 Text("Today")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(AppTheme.textPrimary)
                     .padding(.horizontal, AppTheme.spacingMD)
                     .frame(height: 36)
@@ -83,7 +83,7 @@ struct RecordingsCalendarView: View {
             HStack {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .font(.system(size: 11, weight: .semibold))
                         .tracking(0.6)
                         .textCase(.uppercase)
                         .foregroundColor(AppTheme.textSecondary)
@@ -117,7 +117,7 @@ struct RecordingsCalendarView: View {
         } label: {
             VStack(alignment: .leading, spacing: AppTheme.spacingXS) {
                 Text("\(calendar.component(.day, from: date))")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold))
                     .monospacedDigit()
                     .foregroundColor(isToday ? AppTheme.onAccent : dayTextColor(hasEntries: !entries.isEmpty, isSelected: isSelected, isCurrentMonth: isCurrentMonth))
                     .frame(width: 24, height: 24)
@@ -129,7 +129,7 @@ struct RecordingsCalendarView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         ForEach(Array(entries.prefix(2).enumerated()), id: \.offset) { _, entry in
                             Text(entry.name)
-                                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(AppTheme.textPrimary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -138,7 +138,7 @@ struct RecordingsCalendarView: View {
 
                         if entries.count > 2 {
                             Text("+\(entries.count - 2) more")
-                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .font(.system(size: 9, weight: .semibold))
                                 .foregroundColor(AppTheme.textSecondary)
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -146,7 +146,7 @@ struct RecordingsCalendarView: View {
                     }
 
                     Text(DisplayFormatter.compactDuration(entries.reduce(0) { $0 + $1.duration }))
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .font(.system(size: 11, weight: .semibold))
                         .monospacedDigit()
                         .foregroundColor(AppTheme.textPrimary.opacity(0.9))
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -206,7 +206,7 @@ struct RecordingsCalendarView: View {
     private var selectedDayEntries: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacingSM) {
             Text(selectedDayTitle)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(AppTheme.textPrimary)
 
             let dayEntries = viewModel.entries(on: selectedDate)

@@ -18,7 +18,7 @@ struct SetupRequiredView: View {
                         .glassSurface(in: Circle())
 
                     Text("Start with a project")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(size: 36, weight: .bold))
                         .foregroundColor(AppTheme.textPrimary)
 
                     Text("Recordings belong to a project. Create one to get going.")
@@ -39,7 +39,7 @@ struct SetupRequiredView: View {
                     showingProjectSheet = true
                 } label: {
                     Label("Create Project", systemImage: "plus")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(AppTheme.onAccent)
                         .padding(.horizontal, AppTheme.spacingLG)
                         .frame(height: 46)
@@ -62,14 +62,14 @@ struct SetupRequiredView: View {
     private func setupStep(number: Int, title: String) -> some View {
         HStack(spacing: AppTheme.spacingMD) {
             Text("\(number)")
-                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .font(.system(size: 12, weight: .bold))
                 .foregroundColor(AppTheme.textPrimary)
                 .frame(width: 26, height: 26)
                 .background(AppTheme.surfaceAlt, in: Circle())
                 .overlay(Circle().strokeBorder(AppTheme.border, lineWidth: 1))
 
             Text(title)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(size: 15, weight: .medium))
                 .foregroundColor(AppTheme.textPrimary)
         }
     }

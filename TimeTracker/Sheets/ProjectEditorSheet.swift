@@ -7,11 +7,9 @@ struct ProjectEditorSheet: View {
     let onSave: (Project) -> Void
 
     @State private var name = ""
-    @State private var scope = ""
     @State private var selectedColorHex = AppTheme.colorPalette.first ?? "#4A90D9"
     @State private var customColor = Color(hex: AppTheme.colorPalette.first ?? "#4A90D9")
     @State private var showingInlineColorWheel = false
-    @State private var showingScopeEditor = false
 
     var body: some View {
         NavigationStack {
@@ -26,43 +24,12 @@ struct ProjectEditorSheet: View {
                             .shadow(color: Color(hex: selectedColorHex).opacity(0.7), radius: 5)
 
                         TextField("Project name", text: $name)
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .font(.system(size: 18, weight: .semibold))
                             .textFieldStyle(.plain)
                             .foregroundColor(AppTheme.textPrimary)
                     }
                     .padding(AppTheme.spacingMD)
                     .fieldSurface(cornerRadius: AppTheme.cornerRadiusLarge)
-
-                    DisclosureGroup(isExpanded: $showingScopeEditor) {
-                        TextEditor(text: $scope)
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundColor(AppTheme.textPrimary)
-                            .scrollContentBackground(.hidden)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .frame(minHeight: 120)
-                            .fieldSurface(cornerRadius: AppTheme.cornerRadiusLarge)
-                            .padding(.top, AppTheme.spacingXS)
-                    } label: {
-                        HStack(spacing: AppTheme.spacingXS) {
-                            AppTheme.sectionLabel("Scope")
-
-                            if !scope.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                Text("Added")
-                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                    .foregroundColor(AppTheme.textPrimary)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(AppTheme.surfaceAlt, in: Capsule())
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 12)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            showingScopeEditor.toggle()
-                        }
-                    }
 
                     VStack(alignment: .leading, spacing: AppTheme.spacingMD) {
                         AppTheme.sectionLabel("Accent Color")
@@ -160,12 +127,10 @@ struct ProjectEditorSheet: View {
         .onAppear {
             if let project {
                 name = project.name
-                scope = project.scope
                 selectedColorHex = project.colorHex
             }
             customColor = Color(hex: selectedColorHex)
             showingInlineColorWheel = isCustomColorSelected
-            showingScopeEditor = !scope.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         .onChange(of: customColor) { value in
             selectedColorHex = value.hexString
@@ -181,7 +146,8 @@ struct ProjectEditorSheet: View {
         let updatedProject = Project(
             id: project?.id,
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-            scope: scope.trimmingCharacters(in: .whitespacesAndNewlines),
+            // Scope isn't edited any more; an existing one is kept as it was.
+            scope: project?.scope ?? "",
             colorHex: selectedColorHex,
             createdAt: project?.createdAt ?? now,
             updatedAt: now

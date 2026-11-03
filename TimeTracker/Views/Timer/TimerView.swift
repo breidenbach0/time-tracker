@@ -79,7 +79,7 @@ struct TimerView: View {
             HStack(spacing: AppTheme.spacingMD) {
                 Button(action: toggleRecording) {
                     Label(viewModel.isRunning ? "Stop" : "Start", systemImage: viewModel.isRunning ? "stop.fill" : "play.fill")
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(viewModel.isRunning ? .white : AppTheme.onAccent)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
@@ -92,7 +92,7 @@ struct TimerView: View {
 
                 Button(action: { showingAddSheet = true }) {
                     Label("Manual", systemImage: "square.and.pencil")
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(AppTheme.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
@@ -111,7 +111,7 @@ struct TimerView: View {
 
             TimelineView(.periodic(from: viewModel.startDate, by: 1)) { context in
                 Text(viewModel.formattedElapsedTime(at: context.date))
-                    .font(.system(size: 80, weight: .light, design: .rounded))
+                    .font(.system(size: 80, weight: .light))
                     .monospacedDigit()
                     .foregroundColor(viewModel.isRunning ? AppTheme.textPrimary : AppTheme.textSecondary)
                     .numericTextTransition()
@@ -126,7 +126,7 @@ struct TimerView: View {
             PulsingDot(isActive: viewModel.isRunning, size: 7)
 
             Text(viewModel.isRunning ? "Recording since \(startTimeText)" : "Ready to record")
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(.system(size: 11, weight: .semibold))
                 .tracking(0.8)
                 .textCase(.uppercase)
                 .foregroundColor(viewModel.isRunning ? AppTheme.textPrimary.opacity(0.85) : AppTheme.textSecondary)
@@ -141,7 +141,7 @@ struct TimerView: View {
             prompt: Text(viewModel.recordingPreviewName).foregroundColor(AppTheme.textTertiary)
         )
         .textFieldStyle(.plain)
-        .font(.system(size: 20, weight: .semibold, design: .rounded))
+        .font(.system(size: 20, weight: .semibold))
         .foregroundColor(AppTheme.textPrimary)
         .focused($isNameFocused)
         .padding(.horizontal, AppTheme.spacingMD)
@@ -198,7 +198,7 @@ struct TimerView: View {
                 .font(.system(size: 9, weight: .bold))
                 .foregroundColor(AppTheme.textSecondary)
         }
-        .font(.system(size: 13, weight: .semibold, design: .rounded))
+        .font(.system(size: 13, weight: .semibold))
         .foregroundColor(AppTheme.textPrimary)
         .padding(.horizontal, 14)
         .padding(.vertical, AppTheme.spacingSM)

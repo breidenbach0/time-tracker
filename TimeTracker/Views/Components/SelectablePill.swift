@@ -34,7 +34,7 @@ struct SelectablePill: View {
                 }
 
                 Text(title)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold))
             }
             .foregroundColor(isSelected ? AppTheme.textPrimary : AppTheme.textSecondary)
             .padding(.horizontal, 14)

@@ -112,7 +112,7 @@ struct AddEntrySheet: View {
                     .foregroundColor(AppTheme.textTertiary)
             )
             .textFieldStyle(.plain)
-            .font(.system(size: 28, weight: .bold, design: .rounded))
+            .font(.system(size: 28, weight: .bold))
             .foregroundColor(AppTheme.textPrimary)
             .focused($focusedField, equals: .name)
 
@@ -157,7 +157,7 @@ struct AddEntrySheet: View {
 
             TextField(datePlaceholder, text: $dateInput)
                 .textFieldStyle(.plain)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.system(size: 17, weight: .semibold))
                 .monospacedDigit()
                 .foregroundColor(AppTheme.textPrimary)
                 .padding(.horizontal, AppTheme.spacingMD)
@@ -193,7 +193,7 @@ struct AddEntrySheet: View {
                 dismiss()
             } label: {
                 Text("Cancel")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(AppTheme.textPrimary)
                     .frame(width: 120, height: 40)
             }
@@ -209,7 +209,7 @@ struct AddEntrySheet: View {
                     editingEntry == nil ? "Add Recording" : "Save Recording",
                     systemImage: editingEntry == nil ? "plus" : "checkmark"
                 )
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(AppTheme.onAccent)
                 .frame(width: 190, height: 40)
             }

@@ -18,74 +18,103 @@ struct WorkRangeDial: View {
     private let stepMinutes = 5
 
     var body: some View {
+        HStack(alignment: .center, spacing: AppTheme.spacingMD) {
+            timeColumn(title: "Start", minutes: $startMinutes, handle: .start)
+
+            dial
+                .frame(width: 236, height: 236)
+                .frame(maxWidth: .infinity)
+
+            timeColumn(title: "End", minutes: $endMinutes, handle: .end)
+        }
+    }
+
+    // MARK: - Times
+
+    private func timeColumn(title: String, minutes: Binding<Int>, handle: Handle) -> some View {
         VStack(spacing: AppTheme.spacingSM) {
-            HStack {
-                timeBlock(title: "Stop", value: formattedTime(for: endMinutes), alignment: .leading)
-                Spacer()
-                timeBlock(title: "Start", value: formattedTime(for: startMinutes), alignment: .trailing)
+            HStack(spacing: 6) {
+                handleMark(handle, size: 9)
+                AppTheme.sectionLabel(title)
             }
 
-            GeometryReader { geometry in
-                let side = min(geometry.size.width, geometry.size.height)
-                let lineWidth = max(20, side * 0.088)
-                let ringInset = lineWidth / 2 + 14
-                let radius = (side / 2) - ringInset
-                let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+            Text(formattedTime(for: minutes.wrappedValue))
+                .font(.system(size: 26, weight: .semibold))
+                .monospacedDigit()
+                .numericTextTransition()
+                .foregroundColor(AppTheme.textPrimary)
+                .animation(.easeOut(duration: 0.15), value: minutes.wrappedValue)
 
-                ZStack {
-                    dotRing(radius: radius + 14, center: center)
+            HStack(spacing: AppTheme.spacingSM) {
+                stepButton(systemImage: "minus", minutes: minutes, by: -stepMinutes, help: "\(stepMinutes) minutes earlier")
+                stepButton(systemImage: "plus", minutes: minutes, by: stepMinutes, help: "\(stepMinutes) minutes later")
+            }
+            .glassGroup(spacing: AppTheme.spacingSM)
+        }
+        .frame(width: 124)
+    }
 
-                    Circle()
-                        .stroke(AppTheme.surfaceMuted, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                        .frame(width: radius * 2, height: radius * 2)
+    private func stepButton(systemImage: String, minutes: Binding<Int>, by delta: Int, help: String) -> some View {
+        Button {
+            minutes.wrappedValue = normalized(minutes.wrappedValue + delta)
+        } label: {
+            Image(systemName: systemImage)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(AppTheme.textPrimary)
+                .frame(width: 28, height: 28)
+        }
+        .buttonStyle(.glassCircle())
+        .help(help)
+    }
 
-                    RangeArcShape(startMinutes: startMinutes, endMinutes: endMinutes, totalMinutes: totalMinutes)
-                        .stroke(
-                            LinearGradient(
-                                colors: [tint.opacity(0.95), tint.opacity(0.6)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round)
-                        )
-                        .shadow(color: tint.opacity(0.45), radius: 10)
-                        .frame(width: radius * 2, height: radius * 2)
+    // MARK: - Dial
 
-                    Circle()
-                        .fill(AppTheme.surface)
-                        .overlay(Circle().strokeBorder(AppTheme.edgeHighlight, lineWidth: 1))
-                        .frame(width: radius * 2 - lineWidth - 20, height: radius * 2 - lineWidth - 20)
+    private var dial: some View {
+        GeometryReader { geometry in
+            let side = min(geometry.size.width, geometry.size.height)
+            let lineWidth: CGFloat = 18
+            let radius = side / 2 - lineWidth / 2 - 12
+            let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
 
-                    innerClockLabels(radius: radius - lineWidth * 0.78, center: center)
+            ZStack {
+                hourTicks(radius: radius + lineWidth / 2 + 7, center: center)
 
-                    handle(for: .start, center: center, radius: radius)
-                    handle(for: .end, center: center, radius: radius)
+                Circle()
+                    .stroke(AppTheme.surfaceMuted, lineWidth: lineWidth)
+                    .frame(width: radius * 2, height: radius * 2)
+                    .position(center)
+
+                RangeArcShape(startMinutes: startMinutes, endMinutes: endMinutes, totalMinutes: totalMinutes)
+                    .stroke(tint.opacity(0.9), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+                    .frame(width: radius * 2, height: radius * 2)
+                    .position(center)
+
+                hourLabels(radius: radius - lineWidth / 2 - 15, center: center)
+
+                VStack(spacing: 2) {
+                    AppTheme.sectionLabel("Worked")
+                    Text(workedDurationText)
+                        .font(.system(size: 22, weight: .semibold))
+                        .monospacedDigit()
+                        .numericTextTransition()
+                        .foregroundColor(AppTheme.textPrimary)
                 }
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            updateHandle(from: value.location, in: geometry.size)
-                        }
-                        .onEnded { _ in
-                            activeHandle = nil
-                        }
-                )
-            }
-            .frame(height: 226)
+                .position(center)
 
-            VStack(spacing: 4) {
-                Text("Worked")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundColor(AppTheme.textSecondary)
-
-                Text(workedDurationText)
-                    .font(.system(size: 24, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .numericTextTransition()
-                    .foregroundColor(AppTheme.textPrimary)
+                // The smaller end dot sits on top of the start ring, so both show when they meet.
+                handle(.start, center: center, radius: radius)
+                handle(.end, center: center, radius: radius)
             }
-            .frame(maxWidth: .infinity)
+            .contentShape(Circle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        updateHandle(from: value.location, in: geometry.size)
+                    }
+                    .onEnded { _ in
+                        activeHandle = nil
+                    }
+            )
         }
     }
 
@@ -96,56 +125,72 @@ struct WorkRangeDial: View {
     private var workedDurationText: String {
         let hours = workedDurationMinutes / 60
         let minutes = workedDurationMinutes % 60
-        return String(format: "%02dh %02dm", hours, minutes)
+        return String(format: "%dh %02dm", hours, minutes)
     }
 
-    @ViewBuilder
-    private func dotRing(radius: CGFloat, center: CGPoint) -> some View {
+    private func hourTicks(radius: CGFloat, center: CGPoint) -> some View {
         ZStack {
-            ForEach(0..<96, id: \.self) { index in
-                let minute = index * 15
-                Circle()
-                    .fill(isMinuteWithinRange(minute) ? tint.opacity(0.9) : AppTheme.textTertiary.opacity(0.5))
-                    .frame(width: index.isMultiple(of: 4) ? 4 : 2.5, height: index.isMultiple(of: 4) ? 4 : 2.5)
-                    .position(position(for: minute, center: center, radius: radius))
+            ForEach(0..<24, id: \.self) { hour in
+                let isMajor = hour.isMultiple(of: 6)
+
+                VStack {
+                    Capsule()
+                        .fill(isMinuteWithinRange(hour * 60) ? tint.opacity(0.9) : AppTheme.textTertiary)
+                        .frame(width: isMajor ? 2 : 1.5, height: isMajor ? 7 : 4)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: 8, height: radius * 2)
+                .rotationEffect(.degrees(Double(hour) * 15))
+                .position(center)
             }
         }
     }
 
-    @ViewBuilder
-    private func innerClockLabels(radius: CGFloat, center: CGPoint) -> some View {
+    private func hourLabels(radius: CGFloat, center: CGPoint) -> some View {
         ZStack {
-            clockMarker("12AM", minute: 0, center: center, radius: radius)
-            clockMarker("6AM", minute: 6 * 60, center: center, radius: radius)
-            clockMarker("12PM", minute: 12 * 60, center: center, radius: radius)
-            clockMarker("6PM", minute: 18 * 60, center: center, radius: radius)
+            ForEach([0, 6, 12, 18], id: \.self) { hour in
+                Text(hourLabel(hour))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(AppTheme.textTertiary)
+                    .position(position(for: hour * 60, center: center, radius: radius))
+            }
         }
     }
 
-    @ViewBuilder
-    private func clockMarker(_ title: String, minute: Int, center: CGPoint, radius: CGFloat) -> some View {
-        Text(title)
-            .font(.system(size: 12, weight: .bold, design: .rounded))
-            .foregroundColor(AppTheme.textSecondary)
-            .position(position(for: minute, center: center, radius: radius))
+    /// "12 AM" style for 12-hour clocks, plain hours for 24-hour ones.
+    private func hourLabel(_ hour: Int) -> String {
+        guard timeFormatter.dateFormat.contains("a") else { return "\(hour)" }
+        let display = hour % 12 == 0 ? 12 : hour % 12
+        return "\(display) \(hour < 12 ? "AM" : "PM")"
     }
 
     @ViewBuilder
-    private func handle(for handle: Handle, center: CGPoint, radius: CGFloat) -> some View {
+    private func handle(_ handle: Handle, center: CGPoint, radius: CGFloat) -> some View {
         let minute = handle == .start ? startMinutes : endMinutes
         let isActive = activeHandle == handle
-        let handleRadius = max(14, radius * 0.12)
 
-        Circle()
-            .fill(handle == .start ? AppTheme.textPrimary : tint)
-            .overlay(
-                Circle()
-                    .strokeBorder(Color.white.opacity(0.6), lineWidth: 1.5)
-            )
-            .frame(width: handleRadius * 1.45, height: handleRadius * 1.45)
-            .shadow(color: .black.opacity(isActive ? 0.28 : 0.18), radius: isActive ? 12 : 8, x: 0, y: 4)
-            .scaleEffect(isActive ? 1.06 : 1)
+        handleMark(handle, size: handle == .start ? 24 : 15)
+            .shadow(color: .black.opacity(isActive ? 0.35 : 0.22), radius: isActive ? 8 : 5, y: 2)
+            .scaleEffect(isActive ? 1.12 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isActive)
             .position(position(for: minute, center: center, radius: radius))
+    }
+
+    /// Start is a white ring, end a filled dot in the project's colour.
+    @ViewBuilder
+    private func handleMark(_ handle: Handle, size: CGFloat) -> some View {
+        switch handle {
+        case .start:
+            Circle()
+                .fill(AppTheme.canvas)
+                .overlay(Circle().strokeBorder(AppTheme.textPrimary, lineWidth: max(2, size * 0.14)))
+                .frame(width: size, height: size)
+        case .end:
+            Circle()
+                .fill(tint)
+                .overlay(Circle().strokeBorder(Color.white.opacity(0.85), lineWidth: max(1, size * 0.08)))
+                .frame(width: size, height: size)
+        }
     }
 
     private func updateHandle(from location: CGPoint, in size: CGSize) {
@@ -199,9 +244,12 @@ struct WorkRangeDial: View {
     }
 
     private func snap(_ minute: Int) -> Int {
-        let snapped = Int((Double(minute) / Double(stepMinutes)).rounded()) * stepMinutes
-        let normalized = ((snapped % totalMinutes) + totalMinutes) % totalMinutes
-        return normalized
+        normalized(Int((Double(minute) / Double(stepMinutes)).rounded()) * stepMinutes)
+    }
+
+    /// Wraps minutes into one day, so stepping past midnight comes round again.
+    private func normalized(_ minute: Int) -> Int {
+        ((minute % totalMinutes) + totalMinutes) % totalMinutes
     }
 
     private func position(for minute: Int, center: CGPoint, radius: CGFloat) -> CGPoint {
@@ -225,19 +273,6 @@ struct WorkRangeDial: View {
         return timeFormatter.string(from: date)
     }
 
-    private func timeBlock(title: String, value: String, alignment: HorizontalAlignment) -> some View {
-        VStack(alignment: alignment, spacing: 4) {
-            Text(title)
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundColor(AppTheme.textSecondary)
-                .textCase(.uppercase)
-
-            Text(value)
-                .font(.system(size: 21, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-                .foregroundColor(AppTheme.textPrimary)
-        }
-    }
 }
 
 private struct RangeArcShape: Shape {

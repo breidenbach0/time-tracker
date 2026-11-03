@@ -10,7 +10,7 @@ struct RecordingNotesEditor: View {
             isExpanded: $isExpanded,
             content: {
                 TextEditor(text: $notes)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(AppTheme.textPrimary)
                     .scrollContentBackground(.hidden)
                     .padding(.horizontal, 10)
@@ -25,7 +25,7 @@ struct RecordingNotesEditor: View {
 
                     if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         Text("Added")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(AppTheme.textPrimary)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
