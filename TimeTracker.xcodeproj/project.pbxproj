@@ -19,7 +19,10 @@
 		274B53B049A5010A51985F10 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 03124C39215D841D3A4B5B0C /* Assets.xcassets */; };
 		284F47228B934E126321AE1E /* EntriesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC62DD623BC890EFC32387B /* EntriesViewModel.swift */; };
 		3787ECA4E9E427B11673F683 /* MiniPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C60FD82DE01CE5B0D609BCF /* MiniPlayerView.swift */; };
+		3FDC20D962C390011DF57F5E /* RunningTimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18BE9500205D24CB987E5B2C /* RunningTimerState.swift */; };
+		41347B07031F2F585D24F4C2 /* WorkspaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A03447F1DE12491D0F1F8350 /* WorkspaceStore.swift */; };
 		4D1A0E03C4C1C25EF652E6CF /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967D811820C97F9D3FC79B9F /* TimerView.swift */; };
+		5E0FC1682177FD02C4013F3E /* WorkspaceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F10D675A0014DCF83B95FE /* WorkspaceStoreTests.swift */; };
 		62BCCBCCCF5C3B6F363BDD16 /* DisplayFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A1A7F10F8BA28D0A8C1AE8 /* DisplayFormat.swift */; };
 		6F8A6844C101AF4E276670DA /* TimeTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0880F15F43E8E4C8468621A /* TimeTrackerApp.swift */; };
 		72572F36094D384720644B3F /* WorkRangeDial.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01BF78649713E76816B918F /* WorkRangeDial.swift */; };
@@ -36,8 +39,6 @@
 		C6474CA6A0FA0688B11BEC19 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 8B1DB82A0594DA51CFA936DB /* SQLite */; };
 		C8647E009F5CE86F056BB68B /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652C6C21A0EDD2713CBA8AC6 /* AppTheme.swift */; };
 		D22965B9985CA6C7C75548D7 /* UpdateCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3765351C075C4799C1A878A8 /* UpdateCard.swift */; };
-		D6A69CD25C1FF174BDFCA1DF /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14046C3802A09E1DCDB03E6E /* AppNotifications.swift */; };
-		E532A90B80917A7D67171494 /* RecordingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5B62B2ADBFCEEF92E69C819 /* RecordingStore.swift */; };
 		F4E12DF84C83D69D18156DC5 /* RecordingsCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCBAA4189581E93C469385F3 /* RecordingsCalendarView.swift */; };
 		F8B93D3370801804314691A2 /* EntriesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8826785C648071C0719D9893 /* EntriesListView.swift */; };
 		FE6DB63EE18FEF2739EDF31F /* TimeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 079E4EE3710D229304251229 /* TimeEntry.swift */; };
@@ -59,7 +60,7 @@
 		0901666F710FA07C5B95D1BC /* RecordingsExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsExporter.swift; sourceTree = "<group>"; };
 		0F3330B3F9B4E637AE43EE32 /* RecordingNotesEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingNotesEditor.swift; sourceTree = "<group>"; };
 		12E31815FE137361F4855933 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		14046C3802A09E1DCDB03E6E /* AppNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotifications.swift; sourceTree = "<group>"; };
+		18BE9500205D24CB987E5B2C /* RunningTimerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningTimerState.swift; sourceTree = "<group>"; };
 		26254DB791889486E2655D2F /* SelectablePill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectablePill.swift; sourceTree = "<group>"; };
 		2BABEF389B5C4F5CD29BC036 /* SetupRequiredView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupRequiredView.swift; sourceTree = "<group>"; };
 		2EC62DD623BC890EFC32387B /* EntriesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntriesViewModel.swift; sourceTree = "<group>"; };
@@ -75,9 +76,9 @@
 		967D811820C97F9D3FC79B9F /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		97305BB0B300C88D321D3883 /* TimeTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A01BF78649713E76816B918F /* WorkRangeDial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkRangeDial.swift; sourceTree = "<group>"; };
+		A03447F1DE12491D0F1F8350 /* WorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStore.swift; sourceTree = "<group>"; };
 		A4102CA079872253AFDAABE4 /* WorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceView.swift; sourceTree = "<group>"; };
 		A5474E4E0BCDFAF982ABA880 /* TimeTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TimeTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A5B62B2ADBFCEEF92E69C819 /* RecordingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingStore.swift; sourceTree = "<group>"; };
 		B262E1E06C71347B15AC5AC6 /* MacWindowConfigurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacWindowConfigurator.swift; sourceTree = "<group>"; };
 		BC9A98F39152213792B968B8 /* ExportRangePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportRangePickerSheet.swift; sourceTree = "<group>"; };
 		BCBAA4189581E93C469385F3 /* RecordingsCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsCalendarView.swift; sourceTree = "<group>"; };
@@ -85,6 +86,7 @@
 		C92A90F1461488BAC0859499 /* ProjectEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectEditorSheet.swift; sourceTree = "<group>"; };
 		CFAE67F744639308C0B39933 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		D0880F15F43E8E4C8468621A /* TimeTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackerApp.swift; sourceTree = "<group>"; };
+		D7F10D675A0014DCF83B95FE /* WorkspaceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStoreTests.swift; sourceTree = "<group>"; };
 		EAB4E7B9FC90E2BA385BEDE1 /* WorkspaceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceViewModel.swift; sourceTree = "<group>"; };
 		EC5D7C13B5A770A67350515F /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		F5A44F79217D7FB82A96B680 /* DatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseManager.swift; sourceTree = "<group>"; };
@@ -140,7 +142,6 @@
 		26421E1E68AA10698335137F /* Support */ = {
 			isa = PBXGroup;
 			children = (
-				14046C3802A09E1DCDB03E6E /* AppNotifications.swift */,
 				B262E1E06C71347B15AC5AC6 /* MacWindowConfigurator.swift */,
 			);
 			path = Support;
@@ -179,6 +180,7 @@
 			children = (
 				69A1A7F10F8BA28D0A8C1AE8 /* DisplayFormat.swift */,
 				FF336C461E3A9B492976CF9A /* Project.swift */,
+				18BE9500205D24CB987E5B2C /* RunningTimerState.swift */,
 				079E4EE3710D229304251229 /* TimeEntry.swift */,
 			);
 			path = Models;
@@ -189,6 +191,7 @@
 			children = (
 				55F784A5BC6BB92350A02F13 /* DatabaseMigrationTests.swift */,
 				C111E01F2916BDB08CAE7383 /* UpdaterTests.swift */,
+				D7F10D675A0014DCF83B95FE /* WorkspaceStoreTests.swift */,
 			);
 			path = TimeTrackerTests;
 			sourceTree = "<group>";
@@ -213,8 +216,8 @@
 			isa = PBXGroup;
 			children = (
 				0901666F710FA07C5B95D1BC /* RecordingsExporter.swift */,
-				A5B62B2ADBFCEEF92E69C819 /* RecordingStore.swift */,
 				EC5D7C13B5A770A67350515F /* Updater.swift */,
+				A03447F1DE12491D0F1F8350 /* WorkspaceStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -374,7 +377,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1AE0C93E11B0283D19A48539 /* AddEntrySheet.swift in Sources */,
-				D6A69CD25C1FF174BDFCA1DF /* AppNotifications.swift in Sources */,
 				C8647E009F5CE86F056BB68B /* AppTheme.swift in Sources */,
 				11C492BECD0D9FCA22A7B59A /* DatabaseManager.swift in Sources */,
 				62BCCBCCCF5C3B6F363BDD16 /* DisplayFormat.swift in Sources */,
@@ -388,9 +390,9 @@
 				1389A9F8699D7F3A81C2F29C /* Project.swift in Sources */,
 				914743C5A26983072E8A622E /* ProjectEditorSheet.swift in Sources */,
 				1283A3E0614210ED652E8793 /* RecordingNotesEditor.swift in Sources */,
-				E532A90B80917A7D67171494 /* RecordingStore.swift in Sources */,
 				F4E12DF84C83D69D18156DC5 /* RecordingsCalendarView.swift in Sources */,
 				BF9DEEDA12C6C7AD39BF7708 /* RecordingsExporter.swift in Sources */,
+				3FDC20D962C390011DF57F5E /* RunningTimerState.swift in Sources */,
 				7C43FAB9BF07A1CC494F2138 /* SelectablePill.swift in Sources */,
 				26AC18602D4FE5D23E746B45 /* SetupRequiredView.swift in Sources */,
 				FE6DB63EE18FEF2739EDF31F /* TimeEntry.swift in Sources */,
@@ -400,6 +402,7 @@
 				D22965B9985CA6C7C75548D7 /* UpdateCard.swift in Sources */,
 				148AC440125FF182C97537EB /* Updater.swift in Sources */,
 				72572F36094D384720644B3F /* WorkRangeDial.swift in Sources */,
+				41347B07031F2F585D24F4C2 /* WorkspaceStore.swift in Sources */,
 				81D6733FBEE29F3CA6B24DD8 /* WorkspaceView.swift in Sources */,
 				B379B50777442077616D40A3 /* WorkspaceViewModel.swift in Sources */,
 			);
@@ -411,6 +414,7 @@
 			files = (
 				25AC18DA41265E17C6A82608 /* DatabaseMigrationTests.swift in Sources */,
 				B523353316DEC2D8FAE8C2CB /* UpdaterTests.swift in Sources */,
+				5E0FC1682177FD02C4013F3E /* WorkspaceStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

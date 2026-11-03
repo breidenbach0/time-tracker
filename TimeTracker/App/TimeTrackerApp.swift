@@ -5,23 +5,27 @@ struct TimeTrackerApp: App {
     @StateObject private var timerViewModel = TimerViewModel.shared
     @StateObject private var updater = Updater.shared
 
-    init() {
-        DatabaseManager.prepareStorageIfNeeded()
-        _ = DatabaseManager.shared
+    /// Unit tests run inside the app. They bring their own databases, so the app itself opens
+    /// none and doesn't ask GitHub for releases.
+    static let isRunningUnitTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 
-        // Unit tests run inside the app; they shouldn't ask GitHub for releases.
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            Updater.shared.start()
-        }
+    init() {
+        guard !Self.isRunningUnitTests else { return }
+        DatabaseManager.prepareStorageIfNeeded()
+        Updater.shared.start()
     }
 
     var body: some Scene {
         WindowGroup(id: "main") {
-            MainTabView()
-                .frame(minWidth: 620, minHeight: 700)
-                .environmentObject(timerViewModel)
-                .preferredColorScheme(.dark)
-                .configureMacWindow()
+            if Self.isRunningUnitTests {
+                Color.clear
+            } else {
+                MainTabView()
+                    .frame(minWidth: 620, minHeight: 700)
+                    .environmentObject(timerViewModel)
+                    .preferredColorScheme(.dark)
+                    .configureMacWindow()
+            }
         }
         .defaultSize(width: 920, height: 760)
         .windowResizability(.contentMinSize)

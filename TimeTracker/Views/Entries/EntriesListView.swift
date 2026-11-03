@@ -58,16 +58,10 @@ struct EntriesListView: View {
             }
         }
         .sheet(isPresented: $showingAddSheet) {
-            AddEntrySheet {
-                viewModel.loadWorkspace()
-                viewModel.loadEntries()
-            }
+            AddEntrySheet()
         }
         .sheet(item: $selectedEntry) { entry in
-            AddEntrySheet(editingEntry: entry) {
-                viewModel.loadWorkspace()
-                viewModel.loadEntries()
-            }
+            AddEntrySheet(editingEntry: entry)
         }
         .sheet(isPresented: $showingExportRangePicker) {
             ExportRangePickerSheet(
@@ -81,14 +75,6 @@ struct EntriesListView: View {
                 }
             )
             .frame(minWidth: 430, minHeight: 560)
-        }
-        .onAppear {
-            viewModel.loadWorkspace()
-            viewModel.loadEntries()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .workspaceDidChange)) { _ in
-            viewModel.loadWorkspace()
-            viewModel.loadEntries()
         }
         .alert("Export", isPresented: Binding(
             get: { exportErrorMessage != nil },

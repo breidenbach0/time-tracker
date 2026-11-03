@@ -33,7 +33,7 @@ private enum AppSection: String, CaseIterable, Identifiable {
 
 struct MainTabView: View {
     @State private var selectedSection: AppSection = .record
-    @State private var hasProjects = false
+    @ObservedObject private var store = WorkspaceStore.shared
     @ObservedObject private var updater = Updater.shared
     @Environment(\.openWindow) private var openWindow
 
@@ -44,7 +44,7 @@ struct MainTabView: View {
             ZStack {
                 AppBackdrop()
 
-                if hasProjects {
+                if !store.projects.isEmpty {
                     VStack(spacing: 0) {
                         AppChromeBar(
                             selectedSection: $selectedSection,
@@ -70,10 +70,6 @@ struct MainTabView: View {
         } message: {
             Text("TimeTracker \(updater.currentVersion?.description ?? "") is the newest version.")
         }
-        .onAppear(perform: refreshProjects)
-        .onReceive(NotificationCenter.default.publisher(for: .workspaceDidChange)) { _ in
-            refreshProjects()
-        }
     }
 
     @ViewBuilder
@@ -86,10 +82,6 @@ struct MainTabView: View {
         case .settings:
             SettingsView()
         }
-    }
-
-    private func refreshProjects() {
-        hasProjects = !DatabaseManager.shared.fetchAllProjects().isEmpty
     }
 
     private func openMiniPlayer() {

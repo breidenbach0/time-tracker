@@ -29,17 +29,11 @@ struct TimerView: View {
             }
         }
         .sheet(isPresented: $showingAddSheet) {
-            AddEntrySheet {
-                viewModel.loadWorkspace()
-            }
-            .frame(minWidth: 680, minHeight: 520)
+            AddEntrySheet()
+                .frame(minWidth: 680, minHeight: 520)
         }
         .onAppear {
-            viewModel.loadWorkspace()
             showingNotesEditor = !viewModel.entryNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .workspaceDidChange)) { _ in
-            viewModel.loadWorkspace()
         }
         .onChange(of: viewModel.entryNotes) { _ in
             if !viewModel.entryNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {

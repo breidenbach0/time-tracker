@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 struct EntryDaySection: Identifiable {
@@ -29,40 +30,44 @@ final class EntriesViewModel: ObservableObject {
     private(set) var totalDuration: TimeInterval = 0
     private var projectsByID: [Int64: Project] = [:]
 
-    init() {
-        loadWorkspace()
-        loadEntries()
+    private let store: WorkspaceStore
+    private var cancellables = Set<AnyCancellable>()
+
+    init(store: WorkspaceStore = .shared) {
+        self.store = store
+        apply(projects: store.projects, entries: store.entries)
+
+        // The store publishes before it changes, so use the values it hands over.
+        Publishers.CombineLatest(store.$projects, store.$entries)
+            .dropFirst()
+            .sink { [weak self] projects, entries in
+                self?.apply(projects: projects, entries: entries)
+            }
+            .store(in: &cancellables)
     }
 
-    func loadWorkspace() {
-        projects = DatabaseManager.shared.fetchAllProjects()
+    func selectProjectFilter(_ projectId: Int64?) {
+        selectedProjectFilterId = projectId
+        apply(projects: store.projects, entries: store.entries)
+    }
+
+    func deleteEntry(_ entry: TimeEntry) {
+        store.deleteEntry(entry)
+    }
+
+    private func apply(projects: [Project], entries allEntries: [TimeEntry]) {
+        self.projects = projects
 
         if let selectedProjectFilterId,
            !projects.contains(where: { $0.id == selectedProjectFilterId }) {
             self.selectedProjectFilterId = nil
         }
-    }
 
-    func loadEntries() {
-        entries = DatabaseManager.shared.fetchAllTimeEntries(projectFilterId: selectedProjectFilterId)
-    }
-
-    func selectProjectFilter(_ projectId: Int64?) {
-        selectedProjectFilterId = projectId
-        loadEntries()
-    }
-
-    func deleteEntry(_ entry: TimeEntry) {
-        RecordingStore.shared.deleteEntry(entry)
-        loadEntries()
-    }
-
-    func deleteEntries(at offsets: IndexSet) {
-        for index in offsets {
-            let entry = entries[index]
-            RecordingStore.shared.deleteEntry(entry)
+        if let selectedProjectFilterId {
+            entries = allEntries.filter { $0.projectId == selectedProjectFilterId }
+        } else {
+            entries = allEntries
         }
-        loadEntries()
     }
 
     func project(for id: Int64) -> Project? {
@@ -110,10 +115,7 @@ final class EntriesViewModel: ObservableObject {
         totalDuration = total
     }
 
-    func saveEntry(_ entry: TimeEntry) {
-        _ = RecordingStore.shared.saveEntry(entry)
-        loadEntries()
-    }
+
 
     func exportEntries(from startDate: Date, to endDate: Date) -> [TimeEntry] {
         let calendar = Calendar.current

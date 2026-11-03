@@ -1,8 +1,9 @@
+import Combine
 import Foundation
 
 @MainActor
 final class TimerViewModel: ObservableObject {
-    static let shared = TimerViewModel()
+    static let shared = TimerViewModel(store: .shared)
 
     @Published var isRunning: Bool = false
     @Published var entryName: String = ""
@@ -18,20 +19,37 @@ final class TimerViewModel: ObservableObject {
         isRunning ? max(0, Date().timeIntervalSince(startDate)) : 0
     }
 
-    init() {
-        loadWorkspace()
-        checkRunningTimer()
-    }
+    private let store: WorkspaceStore
+    private var cancellables = Set<AnyCancellable>()
 
-    func loadWorkspace() {
-        projects = DatabaseManager.shared.fetchAllProjects()
+    init(store: WorkspaceStore) {
+        self.store = store
+        projects = store.projects
         ensureValidSelectedProject()
-
         refreshAutoNameSuggestion()
+        restoreRunningTimer()
+
+        // The store publishes before it changes, so use the new value it hands over.
+        store.$projects
+            .dropFirst()
+            .sink { [weak self] projects in
+                guard let self else { return }
+                self.projects = projects
+                self.ensureValidSelectedProject()
+                self.refreshAutoNameSuggestion()
+            }
+            .store(in: &cancellables)
+
+        store.$entries
+            .dropFirst()
+            .sink { [weak self] entries in
+                self?.refreshAutoNameSuggestionIfTaken(in: entries)
+            }
+            .store(in: &cancellables)
     }
 
-    func checkRunningTimer() {
-        if let state = DatabaseManager.shared.getRunningTimerState(),
+    private func restoreRunningTimer() {
+        if let state = store.runningTimer,
            projects.contains(where: { $0.id == state.projectId }) {
             entryName = state.name
             entryNotes = state.notes
@@ -39,7 +57,7 @@ final class TimerViewModel: ObservableObject {
             startDate = state.startDate
             isRunning = true
         } else {
-            DatabaseManager.shared.clearRunningTimerState()
+            store.clearRunningTimer()
         }
     }
 
@@ -59,13 +77,12 @@ final class TimerViewModel: ObservableObject {
         startDate = Date()
         isRunning = true
 
-        DatabaseManager.shared.saveRunningTimerState(
+        store.saveRunningTimer(RunningTimerState(
             name: entryName,
             notes: entryNotes,
             projectId: selectedProjectId,
-            categoryId: nil,
             startDate: startDate
-        )
+        ))
     }
 
     func stopTimer() -> TimeEntry? {
@@ -75,7 +92,7 @@ final class TimerViewModel: ObservableObject {
             return nil
         }
 
-        let entry = RecordingStore.shared.saveEntry(TimeEntry(
+        let entry = store.saveEntry(TimeEntry(
             name: entryName,
             notes: entryNotes,
             projectId: selectedProjectId,
@@ -83,7 +100,7 @@ final class TimerViewModel: ObservableObject {
             startDate: startDate,
             endDate: Date()
         ))
-        DatabaseManager.shared.clearRunningTimerState()
+        store.clearRunningTimer()
 
         isRunning = false
         entryName = ""
@@ -104,13 +121,12 @@ final class TimerViewModel: ObservableObject {
     func persistRunningTimerStateIfNeeded() {
         guard isRunning, let selectedProjectId else { return }
 
-        DatabaseManager.shared.saveRunningTimerState(
+        store.saveRunningTimer(RunningTimerState(
             name: entryName,
             notes: entryNotes,
             projectId: selectedProjectId,
-            categoryId: nil,
             startDate: startDate
-        )
+        ))
     }
 
     var formattedElapsedTime: String {
@@ -155,7 +171,7 @@ final class TimerViewModel: ObservableObject {
         }
 
         if autoNameSuggestion == "Recording" {
-            return DatabaseManager.shared.nextRecordingName(for: selectedProjectId)
+            return store.nextRecordingName(for: selectedProjectId)
         }
 
         return autoNameSuggestion
@@ -183,7 +199,20 @@ final class TimerViewModel: ObservableObject {
             return
         }
 
-        autoNameSuggestion = DatabaseManager.shared.nextRecordingName(for: selectedProjectId)
+        autoNameSuggestion = store.nextRecordingName(for: selectedProjectId)
+    }
+
+    /// Picks a new suggestion only when a recording now uses the current one, so the
+    /// placeholder doesn't change under the user for unrelated edits.
+    private func refreshAutoNameSuggestionIfTaken(in entries: [TimeEntry]) {
+        guard let selectedProjectId else { return }
+        let isTaken = entries.contains {
+            $0.projectId == selectedProjectId
+                && $0.name.trimmingCharacters(in: .whitespacesAndNewlines) == autoNameSuggestion
+        }
+        if isTaken {
+            refreshAutoNameSuggestion()
+        }
     }
 
     private func ensureValidSelectedProject() {

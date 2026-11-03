@@ -68,12 +68,6 @@ struct MiniPlayerView: View {
         }
         .frame(width: 680, height: 74)
         .configureMiniPlayerWindow()
-        .onAppear {
-            viewModel.loadWorkspace()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .workspaceDidChange)) { _ in
-            viewModel.loadWorkspace()
-        }
         .onChange(of: viewModel.entryName) { _ in
             viewModel.persistRunningTimerStateIfNeeded()
         }

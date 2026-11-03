@@ -4,7 +4,7 @@ struct AddEntrySheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let editingEntry: TimeEntry?
-    let onSave: (() -> Void)?
+    private let store = WorkspaceStore.shared
 
     @State private var name = ""
     @State private var notes = ""
@@ -26,9 +26,8 @@ struct AddEntrySheet: View {
         case date
     }
 
-    init(editingEntry: TimeEntry? = nil, onSave: (() -> Void)? = nil) {
+    init(editingEntry: TimeEntry? = nil) {
         self.editingEntry = editingEntry
-        self.onSave = onSave
     }
 
     var body: some View {
@@ -240,7 +239,7 @@ struct AddEntrySheet: View {
     }
 
     private func loadProjects() {
-        projects = DatabaseManager.shared.fetchAllProjects()
+        projects = store.projects
     }
 
     private func populate(from entry: TimeEntry) {
@@ -263,7 +262,7 @@ struct AddEntrySheet: View {
             return
         }
 
-        autoNameHint = DatabaseManager.shared.nextRecordingName(for: projectId)
+        autoNameHint = store.nextRecordingName(for: projectId)
     }
 
     private func saveEntry() {
@@ -278,7 +277,7 @@ struct AddEntrySheet: View {
 
         let resolvedName = trimmedName.isEmpty ? autoNameHint : trimmedName
 
-        _ = RecordingStore.shared.saveEntry(TimeEntry(
+        store.saveEntry(TimeEntry(
             id: editingEntry?.id,
             name: resolvedName,
             notes: notes,
@@ -293,7 +292,6 @@ struct AddEntrySheet: View {
             syncEventIdentifier: editingEntry?.syncEventIdentifier
         ))
 
-        onSave?()
         dismiss()
     }
 

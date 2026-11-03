@@ -32,12 +32,6 @@ struct SettingsView: View {
                 viewModel.saveProject(project)
             }
         }
-        .onAppear {
-            viewModel.loadData()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .workspaceDidChange)) { _ in
-            viewModel.loadData()
-        }
         .confirmationDialog(
             "Delete \u{201C}\(projectPendingDeletion?.name ?? "")\u{201D}?",
             isPresented: Binding(

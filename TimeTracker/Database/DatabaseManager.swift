@@ -483,25 +483,6 @@ final class DatabaseManager {
         return result
     }
 
-    func fetchProject(withId projectIdentifier: Int64) -> Project? {
-        do {
-            let query = projects.filter(id == projectIdentifier)
-            guard let row = try db?.pluck(query) else { return nil }
-
-            return Project(
-                id: row[id],
-                name: row[name],
-                scope: row[scope],
-                colorHex: row[colorHex],
-                createdAt: row[createdAt],
-                updatedAt: row[updatedAt]
-            )
-        } catch {
-            print("Fetch project error: \(error)")
-            return nil
-        }
-    }
-
     @discardableResult
     func insertProject(_ project: Project) -> Int64? {
         do {
@@ -512,7 +493,6 @@ final class DatabaseManager {
                 createdAt <- project.createdAt,
                 updatedAt <- project.updatedAt
             ))
-            postWorkspaceChanged()
             return rowId
         } catch {
             print("Insert project error: \(error)")
@@ -520,8 +500,9 @@ final class DatabaseManager {
         }
     }
 
-    func updateProject(_ project: Project) {
-        guard let projectIdentifier = project.id else { return }
+    @discardableResult
+    func updateProject(_ project: Project) -> Bool {
+        guard let projectIdentifier = project.id else { return false }
 
         do {
             let projectRow = projects.filter(id == projectIdentifier)
@@ -529,35 +510,28 @@ final class DatabaseManager {
                 name <- project.name,
                 scope <- project.scope,
                 colorHex <- project.colorHex,
-                updatedAt <- Date()
+                updatedAt <- project.updatedAt
             ))
-            postWorkspaceChanged()
+            return true
         } catch {
             print("Update project error: \(error)")
+            return false
         }
     }
 
-    func projectHasEntries(_ project: Project) -> Bool {
-        guard let projectIdentifier = project.id else { return false }
-
+    /// Deletes a project and every recording in it, all or nothing.
+    @discardableResult
+    func deleteProjectAndEntries(withId projectIdentifier: Int64) -> Bool {
         do {
-            let count = try db?.scalar(timeEntries.filter(projectId == projectIdentifier).count) ?? 0
-            return count > 0
-        } catch {
-            print("Project count error: \(error)")
+            let database = try connection()
+            try database.transaction {
+                try database.run(timeEntries.filter(projectId == projectIdentifier).delete())
+                try database.run(projects.filter(id == projectIdentifier).delete())
+            }
             return true
-        }
-    }
-
-    func deleteProject(_ project: Project) {
-        guard let projectIdentifier = project.id, !projectHasEntries(project) else { return }
-
-        do {
-            let projectRow = projects.filter(id == projectIdentifier)
-            try db?.run(projectRow.delete())
-            postWorkspaceChanged()
         } catch {
             print("Delete project error: \(error)")
+            return false
         }
     }
 
@@ -613,7 +587,6 @@ final class DatabaseManager {
                 syncCalendarIdentifier <- entry.syncCalendarIdentifier,
                 calendarEventIdentifier <- entry.syncEventIdentifier
             ))
-            postWorkspaceChanged()
             return rowId
         } catch {
             print("Insert time entry error: \(error)")
@@ -621,8 +594,9 @@ final class DatabaseManager {
         }
     }
 
-    func updateTimeEntry(_ entry: TimeEntry) {
-        guard let entryIdentifier = entry.id else { return }
+    @discardableResult
+    func updateTimeEntry(_ entry: TimeEntry) -> Bool {
+        guard let entryIdentifier = entry.id else { return false }
 
         do {
             let entryRow = timeEntries.filter(id == entryIdentifier)
@@ -633,64 +607,34 @@ final class DatabaseManager {
                 categoryId <- entry.categoryId,
                 startDate <- entry.startDate,
                 endDate <- entry.endDate,
-                updatedAt <- Date(),
+                updatedAt <- entry.updatedAt,
                 syncProvider <- entry.syncProvider?.rawValue,
                 syncCalendarIdentifier <- entry.syncCalendarIdentifier,
                 calendarEventIdentifier <- entry.syncEventIdentifier
             ))
-            postWorkspaceChanged()
+            return true
         } catch {
             print("Update time entry error: \(error)")
+            return false
         }
     }
 
-    func deleteTimeEntry(_ entry: TimeEntry) {
-        guard let entryIdentifier = entry.id else { return }
+    @discardableResult
+    func deleteTimeEntry(_ entry: TimeEntry) -> Bool {
+        guard let entryIdentifier = entry.id else { return false }
 
         do {
-            let entryRow = timeEntries.filter(id == entryIdentifier)
-            try db?.run(entryRow.delete())
-            postWorkspaceChanged()
+            try db?.run(timeEntries.filter(id == entryIdentifier).delete())
+            return true
         } catch {
             print("Delete time entry error: \(error)")
+            return false
         }
     }
 
-    func deleteTimeEntries(inProjectWithId projectIdentifier: Int64) {
-        do {
-            try db?.run(timeEntries.filter(projectId == projectIdentifier).delete())
-            postWorkspaceChanged()
-        } catch {
-            print("Delete project time entries error: \(error)")
-        }
-    }
-
-    func nextRecordingName(for projectIdentifier: Int64) -> String {
-        let allNames = famousPeopleNames
-        guard !allNames.isEmpty else { return "Recording" }
-
-        let usedNames = fetchTimeEntryNames(projectFilterId: projectIdentifier)
-        let availableNames = allNames.filter { !usedNames.contains($0) }
-        return (availableNames.randomElement() ?? allNames.randomElement()) ?? "Recording"
-    }
-
-    private func fetchTimeEntryNames(projectFilterId: Int64) -> Set<String> {
-        var names = Set<String>()
-
-        do {
-            let query = timeEntries.select(name).filter(projectId == projectFilterId)
-            for row in try connection().prepare(query) {
-                names.insert(row[name].trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        } catch {
-            print("Fetch time entry names error: \(error)")
-        }
-
-        return names
-    }
-
-    /// The seed list never changes after the first launch, so it is read once.
-    private lazy var famousPeopleNames: [String] = fetchFamousPeopleNames()
+    /// Names new recordings are given when the user doesn't name them. The seed list never
+    /// changes after the first launch, so it is read once.
+    private(set) lazy var recordingNameCandidates: [String] = fetchFamousPeopleNames()
 
     private func fetchFamousPeopleNames() -> [String] {
         var names: [String] = []
@@ -711,35 +655,28 @@ final class DatabaseManager {
 
     // MARK: - Running Timer State
 
-    func saveRunningTimerState(name: String, notes: String, projectId: Int64, categoryId: Int64?, startDate: Date) {
-        UserDefaults.standard.set(name, forKey: "running_timer_name")
-        UserDefaults.standard.set(notes, forKey: "running_timer_notes")
-        UserDefaults.standard.set(projectId, forKey: "running_timer_projectId")
-        UserDefaults.standard.set(categoryId, forKey: "running_timer_categoryId")
-        UserDefaults.standard.set(startDate, forKey: "running_timer_startDate")
+    func saveRunningTimer(_ state: RunningTimerState) {
+        UserDefaults.standard.set(state.name, forKey: "running_timer_name")
+        UserDefaults.standard.set(state.notes, forKey: "running_timer_notes")
+        UserDefaults.standard.set(state.projectId, forKey: "running_timer_projectId")
+        UserDefaults.standard.set(state.startDate, forKey: "running_timer_startDate")
     }
 
-    func getRunningTimerState() -> (name: String, notes: String, projectId: Int64, categoryId: Int64?, startDate: Date)? {
+    func runningTimer() -> RunningTimerState? {
         guard UserDefaults.standard.object(forKey: "running_timer_projectId") != nil,
               let startDate = UserDefaults.standard.object(forKey: "running_timer_startDate") as? Date else {
             return nil
         }
 
-        let name = UserDefaults.standard.string(forKey: "running_timer_name") ?? ""
-        let notes = UserDefaults.standard.string(forKey: "running_timer_notes") ?? ""
-        let projectId = Int64(UserDefaults.standard.integer(forKey: "running_timer_projectId"))
-        let categoryId: Int64?
-
-        if UserDefaults.standard.object(forKey: "running_timer_categoryId") != nil {
-            categoryId = Int64(UserDefaults.standard.integer(forKey: "running_timer_categoryId"))
-        } else {
-            categoryId = nil
-        }
-
-        return (name, notes, projectId, categoryId, startDate)
+        return RunningTimerState(
+            name: UserDefaults.standard.string(forKey: "running_timer_name") ?? "",
+            notes: UserDefaults.standard.string(forKey: "running_timer_notes") ?? "",
+            projectId: Int64(UserDefaults.standard.integer(forKey: "running_timer_projectId")),
+            startDate: startDate
+        )
     }
 
-    func clearRunningTimerState() {
+    func clearRunningTimer() {
         UserDefaults.standard.removeObject(forKey: "running_timer_name")
         UserDefaults.standard.removeObject(forKey: "running_timer_notes")
         UserDefaults.standard.removeObject(forKey: "running_timer_projectId")
@@ -747,7 +684,4 @@ final class DatabaseManager {
         UserDefaults.standard.removeObject(forKey: "running_timer_startDate")
     }
 
-    private func postWorkspaceChanged() {
-        NotificationCenter.default.post(name: .workspaceDidChange, object: nil)
-    }
 }
