@@ -190,7 +190,7 @@ extension ButtonStyle where Self == AppGlassButtonStyle<RoundedRectangle> {
 
 // MARK: - Shared Components
 
-/// The window background: a behind-window blur, deepened slightly so text stays legible.
+/// The window background: a behind-window blur under an even dark tint, so text stays legible.
 struct AppBackdrop: View {
     var body: some View {
         ZStack {
@@ -198,11 +198,7 @@ struct AppBackdrop: View {
             WindowGlassBackground()
             #endif
 
-            LinearGradient(
-                colors: [AppTheme.canvas.opacity(0.45), AppTheme.canvas.opacity(0.70)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            AppTheme.canvas.opacity(0.58)
         }
         .ignoresSafeArea()
     }

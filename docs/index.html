@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TimeTracker — Time tracking for your Mac</title>
   <meta name="description" content="TimeTracker is a Liquid Glass time tracker for macOS. Start a timer for a project or add hours by hand, see your week as a list or a calendar, and export it as a PDF. Free and open source.">
-  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#07070b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#111114">
   <meta property="og:type" content="website">
   <meta property="og:title" content="TimeTracker — Time tracking for your Mac">
   <meta property="og:description" content="A Liquid Glass time tracker for macOS: a one-click timer, a floating mini player, a list and a calendar of your hours, and PDF exports. Free and open source.">
@@ -19,8 +18,6 @@
   <script src="site.js" defer></script>
 </head>
 <body>
-  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-
   <header class="nav-wrap">
     <nav class="nav glass" aria-label="Main">
       <a class="brand" href="#top">
@@ -39,8 +36,9 @@
 
   <main id="top">
     <section class="hero">
-      <img class="hero-icon" src="images/app-icon.png" alt="" width="144" height="144">
-      <h1>Your hours,<br><span class="gradient-text">on glass.</span></h1>
+      <img class="hero-icon" src="images/app-icon.png" alt="" width="128" height="128">
+      <p class="status">Time tracking for your Mac</p>
+      <h1>Your hours,<br><span class="dim">on glass.</span></h1>
       <p class="lead">TimeTracker is a time tracker for your Mac. Start a timer for a project, or add hours by hand, then see your week as a list or a calendar and export it as a PDF.</p>
       <div class="cta">
         <a class="button button-primary" href="https://github.com/breidenbach0/time-tracker/releases/latest/download/TimeTracker.dmg">
@@ -52,10 +50,10 @@
           View on GitHub
         </a>
       </div>
-      <p class="fineprint">Free and open source · <span data-version>Version 1.1.0</span> · macOS 13 or later · Apple silicon and Intel</p>
+      <p class="fineprint">Free and open source · <span data-version>Version 1.1.1</span> · macOS 13 or later · Apple silicon and Intel</p>
 
       <figure class="hero-shot">
-        <img src="images/record.png" width="1400" height="1156" alt="The TimeTracker window recording: a recording called Ada Lovelace in the Northwind App project with notes, the status Recording since 09:26, a clock at 1 hour 22 minutes, and a red Stop button next to Manual, all on dark glass.">
+        <img src="images/record.png" width="1400" height="1156" alt="The TimeTracker window recording: a recording called Ada Lovelace in the Northwind App project with notes, the status Recording since 10:38, a clock at 1 hour 26 minutes, and a red Stop button next to Manual, all on dark glass.">
       </figure>
     </section>
 
@@ -64,32 +62,32 @@
       <h2>Everything you need. Nothing you don't.</h2>
       <div class="features">
         <article class="feature glass reveal">
-          <div class="feature-icon tile-red"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5" /><path d="M12 9.5v4l2.5 2M9.5 3h5" /></svg></div>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5" /><path d="M12 9.5v4l2.5 2M9.5 3h5" /></svg></div>
           <h3>One click to start</h3>
           <p>Pick a project and press Start. A running recording keeps going if you quit, restart or update, and picks up where it was.</p>
         </article>
         <article class="feature glass reveal">
-          <div class="feature-icon tile-purple"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="9" width="19" height="6.5" rx="3.25" /><circle cx="17.5" cy="12.25" r="1.2" /><path d="M6 12.25h5" /></svg></div>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="9" width="19" height="6.5" rx="3.25" /><circle cx="17.5" cy="12.25" r="1.2" /><path d="M6 12.25h5" /></svg></div>
           <h3>A mini player</h3>
           <p>Shrink TimeTracker to a slim glass bar that floats above your other windows, with the clock, the project and Stop always in reach.</p>
         </article>
         <article class="feature glass reveal">
-          <div class="feature-icon tile-orange"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5" /><circle cx="12" cy="3.5" r="1.4" /><circle cx="20.5" cy="12" r="1.4" /></svg></div>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5" /><circle cx="12" cy="3.5" r="1.4" /><circle cx="20.5" cy="12" r="1.4" /></svg></div>
           <h3>Hours by hand</h3>
           <p>Forgot the timer? Pick the day and drag the start and end around a 24-hour dial, in five-minute steps.</p>
         </article>
         <article class="feature glass reveal">
-          <div class="feature-icon tile-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3" /><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4" /></svg></div>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3" /><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4" /></svg></div>
           <h3>A list or a calendar</h3>
           <p>Every recording grouped by day with daily totals, or a month calendar tinted in your projects' colours. Filter by project in both.</p>
         </article>
         <article class="feature glass reveal">
-          <div class="feature-icon tile-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7z" /><path d="M14 3.5v4h4M9.5 13h5M9.5 16.5h5" /></svg></div>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7z" /><path d="M14 3.5v4h4M9.5 13h5M9.5 16.5h5" /></svg></div>
           <h3>PDF reports</h3>
           <p>Pick the days, and TimeTracker writes a clean PDF with every recording, its notes and its hours, ready to share. Days in your last export are marked.</p>
         </article>
         <article class="feature glass reveal">
-          <div class="feature-icon tile-graphite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6z" /><path d="m9 12 2 2 4-4" /></svg></div>
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6z" /><path d="m9 12 2 2 4-4" /></svg></div>
           <h3>Yours, and up to date</h3>
           <p>No account and no cloud: your recordings stay on your Mac. Updates arrive signed by the developer and install in place.</p>
         </article>
@@ -124,7 +122,7 @@
           <p>Name the recording, or leave it and TimeTracker picks a name. Choose the project and the day, then drag the two handles around the dial to when you started and stopped.</p>
         </div>
         <div class="showcase-shot">
-          <img src="images/manual.png" width="1400" height="1356" loading="lazy" alt="The New Recording sheet: a suggested name, project choices, the date, and a 24-hour dial with a pink arc from 9:00 to 10:00.">
+          <img src="images/manual.png" width="1400" height="1357" loading="lazy" alt="The New Recording sheet: a suggested name, project choices, the date, and a 24-hour dial with a pink arc from 9:00 to 10:00.">
         </div>
       </div>
     </section>
@@ -134,7 +132,7 @@
       <h2>Always in reach.</h2>
       <p class="section-lead">Click the mini player button and the window shrinks to a glass bar that stays above everything else, on every Space.</p>
       <div class="mini-card glass">
-        <img src="images/mini-player.png" width="1360" height="148" loading="lazy" alt="The mini player: a glass bar with a red recording dot, the recording's name, the Northwind App project, a clock at 1:24:48 and a red Stop button.">
+        <img src="images/mini-player.png" width="1360" height="148" loading="lazy" alt="The mini player: a glass bar with a red recording dot, the recording's name, the Northwind App project, a clock at 1:24:13 and a red Stop button.">
       </div>
     </section>
 

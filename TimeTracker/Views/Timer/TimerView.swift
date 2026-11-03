@@ -15,8 +15,6 @@ struct TimerView: View {
             let workspaceWidth = min(isCompactLayout ? 420 : 760, availableWidth)
 
             ZStack {
-                ambientGlow
-
                 Group {
                     if isCompactLayout {
                         compactWorkspace(width: workspaceWidth)
@@ -49,22 +47,6 @@ struct TimerView: View {
         }
     }
 
-    /// Soft light in the project's color behind the glass; brighter while recording.
-    private var ambientGlow: some View {
-        RadialGradient(
-            colors: [
-                (viewModel.isRunning ? AppTheme.recording : projectTint).opacity(viewModel.isRunning ? 0.22 : 0.16),
-                .clear
-            ],
-            center: UnitPoint(x: 0.5, y: 0.42),
-            startRadius: 0,
-            endRadius: 460
-        )
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .animation(.easeInOut(duration: 0.6), value: viewModel.isRunning)
-        .animation(.easeInOut(duration: 0.6), value: viewModel.selectedProjectId)
-    }
 
     private func compactWorkspace(width: CGFloat) -> some View {
         timerCard(showContext: true)
