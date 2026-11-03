@@ -72,4 +72,17 @@ enum DisplayFormatter {
         cache[key] = formatter
         return formatter
     }
+
+    /// "2h 5m", or "45m" under an hour.
+    static func compactDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
+
+        if hours > 0 {
+            return "\(hours)h \(remainingMinutes)m"
+        }
+
+        return "\(remainingMinutes)m"
+    }
 }

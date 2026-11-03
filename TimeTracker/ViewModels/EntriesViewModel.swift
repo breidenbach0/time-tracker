@@ -1,24 +1,5 @@
 import Foundation
 
-enum ExportPeriod: String, CaseIterable, Identifiable {
-    case lastWeek
-    case lastMonth
-    case lastThreeMonths
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .lastWeek:
-            return "Last Week"
-        case .lastMonth:
-            return "Last Month"
-        case .lastThreeMonths:
-            return "Last 3 Months"
-        }
-    }
-}
-
 struct EntryDaySection: Identifiable {
     let day: Date
     let entries: [TimeEntry]
@@ -145,22 +126,4 @@ final class EntriesViewModel: ObservableObject {
         }
     }
 
-    func exportEntries(for period: ExportPeriod) -> [TimeEntry] {
-        let lowerBound = startDate(for: period)
-        return entries.filter { $0.startDate >= lowerBound }
-    }
-
-    private func startDate(for period: ExportPeriod) -> Date {
-        let calendar = Calendar.current
-        let now = Date()
-
-        switch period {
-        case .lastWeek:
-            return calendar.date(byAdding: .day, value: -7, to: now) ?? now
-        case .lastMonth:
-            return calendar.date(byAdding: .month, value: -1, to: now) ?? now
-        case .lastThreeMonths:
-            return calendar.date(byAdding: .month, value: -3, to: now) ?? now
-        }
-    }
 }
